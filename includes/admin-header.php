@@ -19,6 +19,10 @@ if (!isset($active_page)) { $active_page = ''; }
 if (!isset($wrap_max))    { $wrap_max = 720; }
 if (!isset($extra_style)) { $extra_style = ''; }
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 function navClass($page, $active_page) {
     return $page === $active_page ? ' class="active"' : '';
 }
@@ -70,7 +74,12 @@ function navClass($page, $active_page) {
   }
   nav.admin-nav a:hover { border-color: var(--accent); }
   nav.admin-nav a.active { background: var(--accent); border-color: var(--accent); color: #FFF8EF; }
-  nav.admin-nav a.logout-link { color: var(--accent-dark); margin-left: auto; }
+  nav.admin-nav form.logout-form { margin: 0 0 0 auto; }
+  nav.admin-nav button.logout-link {
+    min-height: 44px; padding: 0 16px; border-radius: 12px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    color: var(--accent-dark); white-space: nowrap;
+  }
 
   /* ---------- Komponen umum dipakai di banyak halaman admin ---------- */
   .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
@@ -151,7 +160,10 @@ function navClass($page, $active_page) {
       <a href="piutang.php"<?= navClass('piutang', $active_page) ?>>Piutang</a>
       <a href="laporan.php"<?= navClass('laporan', $active_page) ?>>Laporan</a>
       <a href="topping.php"<?= navClass('topping', $active_page) ?>>Topping</a>
-      <a href="logout.php" class="logout-link">Logout</a>
+      <form method="POST" action="logout.php" class="logout-form">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+        <button type="submit" class="logout-link">Logout</button>
+      </form>
     </nav>
   </div>
 </div>

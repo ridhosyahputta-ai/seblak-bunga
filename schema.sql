@@ -53,7 +53,7 @@ CREATE TABLE `pengaturan` (
   `nilai` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nama_pengaturan` (`nama_pengaturan`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `pengaturan` (`id`, `nama_pengaturan`, `nilai`) VALUES
 (1, 'harga_dasar_seblak', '3000');
@@ -77,7 +77,7 @@ CREATE TABLE `topping` (
   `harga_tambahan` int(11) NOT NULL,
   `status_aktif` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `topping` (`id`, `nama_topping`, `harga_tambahan`, `status_aktif`) VALUES
 (1, 'Kerupuk udang', 1000, 1),
@@ -107,7 +107,7 @@ CREATE TABLE `pelanggan` (
   `no_hp` varchar(20) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 -- ------------------------------------------------------------
@@ -136,7 +136,7 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `users` (`id`, `username`, `password`, `nama`, `created_at`) VALUES
 (1, 'tehdewi', '$2y$10$7Ntsbwo5.RQrdaG.9WOUguGdd7Sai0rkjNAJ30ILJ1DYvEvV4DdwS', 'Teh Dewi', '2026-09-11 05:37:33');
@@ -192,7 +192,7 @@ CREATE TABLE `transaksi` (
   UNIQUE KEY `kode_transaksi` (`kode_transaksi`),
   KEY `id_pelanggan` (`id_pelanggan`),
   CONSTRAINT `transaksi_ibfk_1` FOREIGN KEY (`id_pelanggan`) REFERENCES `pelanggan` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 -- ------------------------------------------------------------
@@ -234,7 +234,7 @@ CREATE TABLE `transaksi_detail` (
   PRIMARY KEY (`id`),
   KEY `id_transaksi` (`id_transaksi`),
   CONSTRAINT `transaksi_detail_ibfk_1` FOREIGN KEY (`id_transaksi`) REFERENCES `transaksi` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 -- ------------------------------------------------------------
@@ -267,7 +267,7 @@ CREATE TABLE `transaksi_detail_topping` (
   KEY `id_topping` (`id_topping`),
   CONSTRAINT `transaksi_detail_topping_ibfk_1` FOREIGN KEY (`id_transaksi_detail`) REFERENCES `transaksi_detail` (`id`),
   CONSTRAINT `transaksi_detail_topping_ibfk_2` FOREIGN KEY (`id_topping`) REFERENCES `topping` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 -- ------------------------------------------------------------
@@ -292,7 +292,7 @@ CREATE TABLE `pembayaran_piutang` (
   PRIMARY KEY (`id`),
   KEY `id_transaksi` (`id_transaksi`),
   CONSTRAINT `pembayaran_piutang_ibfk_1` FOREIGN KEY (`id_transaksi`) REFERENCES `transaksi` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -300,14 +300,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ============================================================
 -- Catatan jujur (bukan disembunyikan biar rapi):
 --
--- 1. Database-nya didefinisikan utf8mb4 (lihat CREATE DATABASE di
---    atas, sesuai config/database.php yang connect pakai charset
---    utf8mb4), TAPI semua tabel di atas ternyata charset-nya
---    latin1_swedish_ci -- itu bawaan default MySQL/XAMPP pas
---    tabel-tabel ini dibuat dan belum pernah diseragamkan. Untuk
---    data yang dipakai sekarang (Bahasa Indonesia tanpa emoji/aksara
---    non-Latin) ini gak menimbulkan masalah yang kelihatan, tapi
---    idealnya diseragamkan ke utf8mb4 kalau nanti sempat.
+-- 1. Semua tabel memakai utf8mb4_general_ci agar konsisten dengan
+--    database dan charset koneksi PDO. Untuk database lama, jalankan
+--    migrations/001_convert_utf8mb4.sql setelah membuat backup.
 --
 -- 2. FOREIGN_KEY_CHECKS dimatikan sementara cuma supaya urutan
 --    CREATE TABLE di atas (yang disusun buat enak dibaca manusia,

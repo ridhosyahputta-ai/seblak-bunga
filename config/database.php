@@ -19,10 +19,9 @@ $options = [
 try {
     $pdo = new PDO($dsn, $db_user, $db_pass, $options);
 } catch (PDOException $e) {
-    // Untuk sekarang (development) pesan error ditampilkan biar gampang debug.
-    // NANTI SEBELUM DIKUMPULKAN/DIPAKAI BENERAN, ganti jadi pesan generik
-    // biar detail koneksi database gak bocor ke publik.
-    die("Koneksi database gagal: " . $e->getMessage());
+    error_log('Koneksi database Seblak Bunga gagal: ' . $e->getMessage());
+    http_response_code(500);
+    die('Terjadi kesalahan pada sistem. Silakan coba lagi.');
 }
 
 // ------------------------------------------------------------

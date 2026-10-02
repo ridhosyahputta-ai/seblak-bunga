@@ -56,32 +56,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Form udah kadaluarsa (token tidak cocok). Silakan submit ulang.';
     }
 
-    $metode_bayar   = $_POST['metode_bayar'] ?? '';
-    $pelanggan_mode = $_POST['pelanggan_mode'] ?? 'none';
-    $catatan        = trim($_POST['catatan'] ?? '');
-    $itemsRaw       = $_POST['item'] ?? [];
+    $metode_bayar   = isset($_POST['metode_bayar']) && is_string($_POST['metode_bayar']) ? $_POST['metode_bayar'] : '';
+    $pelanggan_mode = isset($_POST['pelanggan_mode']) && is_string($_POST['pelanggan_mode']) ? $_POST['pelanggan_mode'] : '';
+    $catatan        = isset($_POST['catatan']) && is_string($_POST['catatan']) ? trim($_POST['catatan']) : '';
+    $itemsRaw       = isset($_POST['item']) && is_array($_POST['item']) ? $_POST['item'] : [];
 
     // simpan balik ke $old buat repopulate form kalau gagal validasi
     $old['metode_bayar']   = $metode_bayar;
     $old['pelanggan_mode'] = $pelanggan_mode;
-    $old['id_pelanggan']   = $_POST['id_pelanggan'] ?? '';
-    $old['pelanggan_nama'] = trim($_POST['pelanggan_nama'] ?? '');
-    $old['pelanggan_hp']   = trim($_POST['pelanggan_hp'] ?? '');
+    $old['id_pelanggan']   = isset($_POST['id_pelanggan']) && is_string($_POST['id_pelanggan']) ? $_POST['id_pelanggan'] : '';
+    $old['pelanggan_nama'] = isset($_POST['pelanggan_nama']) && is_string($_POST['pelanggan_nama']) ? trim($_POST['pelanggan_nama']) : '';
+    $old['pelanggan_hp']   = isset($_POST['pelanggan_hp']) && is_string($_POST['pelanggan_hp']) ? trim($_POST['pelanggan_hp']) : '';
     $old['catatan']        = $catatan;
     $old['item']           = $itemsRaw ?: $old['item'];
 
     if (!in_array($metode_bayar, ['tunai', 'qris', 'utang'], true)) {
         $errors[] = 'Metode bayar tidak valid.';
     }
+    if (!in_array($pelanggan_mode, ['none', 'existing', 'baru'], true)) {
+        $errors[] = 'Pilihan pelanggan tidak valid.';
+    }
 
     // -- Tentuin pelanggan --
     // id_pelanggan nullable karena pembeli lewat gak perlu dicatat.
     // Wajib diisi kalau metode 'utang', biar jelas piutangnya ke siapa.
-    if ($pelanggan_mode === 'baru' && $old['pelanggan_nama'] === '') {
-        $errors[] = 'Nama pelanggan baru wajib diisi.';
+    if ($pelanggan_mode === 'baru'
+        && ($old['pelanggan_nama'] === '' || mb_strlen($old['pelanggan_nama']) > 100)) {
+        $errors[] = 'Nama pelanggan baru wajib diisi (maksimal 100 karakter).';
     }
-    if ($pelanggan_mode === 'existing' && (!ctype_digit((string) $old['id_pelanggan']))) {
-        $errors[] = 'Pelanggan yang dipilih tidak valid.';
+    if (mb_strlen($catatan) > 255) {
+        $errors[] = 'Catatan maksimal 255 karakter.';
+    }
+    if ($pelanggan_mode === 'existing') {
+        if (!ctype_digit((string) $old['id_pelanggan']) || (int) $old['id_pelanggan'] <= 0) {
+            $errors[] = 'Pelanggan yang dipilih tidak valid.';
+        } else {
+            $stmt = $pdo->prepare("SELECT id FROM pelanggan WHERE id = ?");
+            $stmt->execute([(int) $old['id_pelanggan']]);
+            if (!$stmt->fetchColumn()) {
+                $errors[] = 'Pelanggan yang dipilih tidak ditemukan.';
+            }
+        }
+    }
+    if ($pelanggan_mode === 'baru' && $old['pelanggan_hp'] !== ''
+        && !preg_match('/^[0-9+(). -]{6,20}$/', $old['pelanggan_hp'])) {
+        $errors[] = 'Nomor HP pelanggan tidak valid.';
     }
     if ($metode_bayar === 'utang' && $pelanggan_mode === 'none') {
         $errors[] = 'Transaksi utang wajib pilih pelanggan (existing atau baru) supaya jelas piutangnya ke siapa.';
@@ -91,12 +110,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // id topping yang gak ada di $toppingMap (nonaktif / hasil request
     // manual) diabaikan diam-diam.
     $cleanItems = [];
-    foreach ($old['item'] as $row) {
-        $level = trim($row['level_pedas'] ?? '');
+    foreach ($itemsRaw as $row) {
+        if (!is_array($row)) {
+            $errors[] = 'Data porsi tidak valid.';
+            continue;
+        }
+        $level = trim((string) ($row['level_pedas'] ?? ''));
         $level = ($level === '') ? null : $level;
+        if ($level !== null && mb_strlen($level) > 50) {
+            $errors[] = 'Level pedas maksimal 50 karakter.';
+            continue;
+        }
 
         $toppingIds = [];
-        foreach (($row['topping'] ?? []) as $tid) {
+        $rawToppings = isset($row['topping']) && is_array($row['topping']) ? $row['topping'] : [];
+        foreach ($rawToppings as $tid) {
             $tid = (int) $tid;
             if (isset($toppingMap[$tid]) && !in_array($tid, $toppingIds, true)) {
                 $toppingIds[] = $tid;
@@ -126,8 +154,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Insert pakai placeholder dulu, kode_transaksi "cantik" (TRX+tanggal
             // +id) baru di-UPDATE setelah tau id auto-increment-nya.
+            $kodeSementara = 'TEMP-' . bin2hex(random_bytes(12));
             $stmt = $pdo->prepare("INSERT INTO transaksi (kode_transaksi, id_pelanggan, metode_bayar, status_bayar, total_bayar, catatan) VALUES (?, ?, ?, ?, 0, ?)");
-            $stmt->execute(['TEMP', $id_pelanggan, $metode_bayar, $status_bayar, $catatan !== '' ? $catatan : null]);
+            $stmt->execute([$kodeSementara, $id_pelanggan, $metode_bayar, $status_bayar, $catatan !== '' ? $catatan : null]);
             $id_transaksi = (int) $pdo->lastInsertId();
 
             $grand_total = 0;
@@ -163,12 +192,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: transaksi.php');
             exit;
 
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            // Development: pesan asli ditampilin biar gampang debug (sama
-            // seperti pendekatan di config/database.php). Nanti sebelum
-            // dipakai beneran sebaiknya diganti pesan generik.
-            $errors[] = 'Gagal menyimpan transaksi: ' . $e->getMessage();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Gagal menyimpan transaksi: ' . $e->getMessage());
+            $errors[] = 'Terjadi kesalahan pada sistem. Silakan coba lagi.';
         }
     }
 }

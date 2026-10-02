@@ -31,83 +31,89 @@ $errors = [];
 // Proses submit cicilan
 // ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'] ?? '')) {
         $errors[] = 'Form kadaluarsa (token tidak cocok). Silakan submit ulang.';
     }
 
-    $id_transaksi = (int) ($_POST['id_transaksi'] ?? 0);
-    $jumlah_bayar = (int) ($_POST['jumlah_bayar'] ?? 0);
+    $id_transaksi = filter_var($_POST['id_transaksi'] ?? null, FILTER_VALIDATE_INT);
+    $jumlah_bayar = filter_var($_POST['jumlah_bayar'] ?? null, FILTER_VALIDATE_INT);
 
-    if ($jumlah_bayar <= 0) {
-        $errors[] = 'Jumlah bayar harus lebih dari 0.';
+    if (!$id_transaksi || $id_transaksi <= 0) {
+        $errors[] = 'Transaksi tidak valid.';
     }
-
-    // Hitung ulang sisa utang fresh dari DB saat submit, jangan percaya
-    // nilai dari form (bisa stale kalau kasir buka 2 tab).
-    $stmt = $pdo->prepare("
-        SELECT t.id, t.total_bayar, t.status_bayar, t.metode_bayar, t.id_pelanggan,
-               COALESCE(SUM(pp.jumlah_bayar), 0) AS total_dibayar
-        FROM transaksi t
-        LEFT JOIN pembayaran_piutang pp ON pp.id_transaksi = t.id
-        WHERE t.id = ?
-        GROUP BY t.id, t.total_bayar, t.status_bayar, t.metode_bayar, t.id_pelanggan
-    ");
-    $stmt->execute([$id_transaksi]);
-    $target = $stmt->fetch();
-
-    $sisaSaatIni = 0;
-    if (!$target) {
-        $errors[] = 'Transaksi tidak ditemukan.';
-    } elseif ((int) $target['id_pelanggan'] !== $id_pelanggan) {
-        // Jaga-jaga: id_transaksi di form seharusnya selalu milik
-        // pelanggan yang sedang dibuka, tapi form/request bisa aja
-        // dipalsukan manual buat coba bayar nota pelanggan lain.
-        $errors[] = 'Transaksi ini bukan milik pelanggan yang sedang dibuka.';
-    } elseif ($target['metode_bayar'] !== 'utang' || $target['status_bayar'] !== 'belum_lunas') {
-        $errors[] = 'Transaksi ini bukan utang yang masih berjalan (mungkin sudah lunas).';
-    } else {
-        $sisaSaatIni = (int) $target['total_bayar'] - (int) $target['total_dibayar'];
-        if ($jumlah_bayar > $sisaSaatIni) {
-            $errors[] = 'Jumlah bayar Rp' . number_format($jumlah_bayar, 0, ',', '.')
-                . ' melebihi sisa utang transaksi ini (Rp' . number_format($sisaSaatIni, 0, ',', '.') . ').';
-        }
+    if (!$jumlah_bayar || $jumlah_bayar <= 0) {
+        $errors[] = 'Jumlah bayar harus lebih dari 0.';
     }
 
     if (empty($errors)) {
         try {
             $pdo->beginTransaction();
 
+            // Kunci baris transaksi sampai commit. Ini mencegah dua tab
+            // membayar sisa yang sama secara bersamaan dan membuat overpayment.
+            $stmt = $pdo->prepare("
+                SELECT id, total_bayar, status_bayar, metode_bayar, id_pelanggan
+                FROM transaksi
+                WHERE id = ?
+                FOR UPDATE
+            ");
+            $stmt->execute([$id_transaksi]);
+            $target = $stmt->fetch();
+
+            if (!$target) {
+                throw new DomainException('Transaksi tidak ditemukan.');
+            }
+            if ((int) $target['id_pelanggan'] !== $id_pelanggan) {
+                throw new DomainException('Transaksi ini bukan milik pelanggan yang sedang dibuka.');
+            }
+            if ($target['metode_bayar'] !== 'utang' || $target['status_bayar'] !== 'belum_lunas') {
+                throw new DomainException('Transaksi ini bukan utang yang masih berjalan (mungkin sudah lunas).');
+            }
+
+            $stmt = $pdo->prepare("SELECT COALESCE(SUM(jumlah_bayar), 0) FROM pembayaran_piutang WHERE id_transaksi = ?");
+            $stmt->execute([$id_transaksi]);
+            $totalDibayar = (int) $stmt->fetchColumn();
+            $sisaSaatIni = (int) $target['total_bayar'] - $totalDibayar;
+
+            if ($sisaSaatIni <= 0) {
+                throw new DomainException('Transaksi ini sudah lunas.');
+            }
+            if ($jumlah_bayar > $sisaSaatIni) {
+                throw new DomainException(
+                    'Jumlah bayar Rp' . number_format($jumlah_bayar, 0, ',', '.')
+                    . ' melebihi sisa utang transaksi ini (Rp'
+                    . number_format($sisaSaatIni, 0, ',', '.') . ').'
+                );
+            }
+
             $stmt = $pdo->prepare("INSERT INTO pembayaran_piutang (id_transaksi, jumlah_bayar) VALUES (?, ?)");
             $stmt->execute([$id_transaksi, $jumlah_bayar]);
 
-            // status_bayar gak pernah di-set manual dari form -- selalu
-            // diturunkan ulang dari total pembayaran yang tercatat di DB.
-            $stmt = $pdo->prepare("SELECT COALESCE(SUM(jumlah_bayar), 0) FROM pembayaran_piutang WHERE id_transaksi = ?");
-            $stmt->execute([$id_transaksi]);
-            $totalDibayarBaru = (int) $stmt->fetchColumn();
-
-            if ($totalDibayarBaru >= (int) $target['total_bayar']) {
+            if ($jumlah_bayar === $sisaSaatIni) {
                 $stmt = $pdo->prepare("UPDATE transaksi SET status_bayar = 'lunas' WHERE id = ?");
                 $stmt->execute([$id_transaksi]);
             }
 
             $pdo->commit();
 
-            // Post/Redirect/Get -- biar refresh browser gak nyatet cicilan
-            // dobel buat pembayaran yang sama.
             unset($_SESSION['csrf_token']);
             $_SESSION['flash_success'] = 'Cicilan Rp' . number_format($jumlah_bayar, 0, ',', '.') . ' berhasil dicatat.';
             header('Location: piutang_detail.php?id_pelanggan=' . $id_pelanggan);
             exit;
-
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            $errors[] = 'Gagal menyimpan cicilan: ' . $e->getMessage();
+        } catch (DomainException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $errors[] = $e->getMessage();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Gagal menyimpan cicilan: ' . $e->getMessage());
+            $errors[] = 'Terjadi kesalahan pada sistem. Silakan coba lagi.';
         }
     }
 }
-
 $success = null;
 if (isset($_SESSION['flash_success'])) {
     $success = $_SESSION['flash_success'];

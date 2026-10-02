@@ -25,13 +25,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'tambah') {
-        $nama  = trim($_POST['nama_topping'] ?? '');
-        $harga = $_POST['harga_tambahan'] ?? '';
+        $nama  = isset($_POST['nama_topping']) && is_string($_POST['nama_topping']) ? trim($_POST['nama_topping']) : '';
+        $harga = isset($_POST['harga_tambahan']) && is_string($_POST['harga_tambahan']) ? $_POST['harga_tambahan'] : '';
 
         if ($nama === '' || mb_strlen($nama) > 50) {
             $_SESSION['flash_error'] = 'Nama topping wajib diisi (maksimal 50 karakter).';
         } elseif (!ctype_digit((string) $harga)) {
-            $_SESSION['flash_error'] = 'Harga tambahan harus berupa angka positif.';
+            $_SESSION['flash_error'] = 'Harga tambahan harus berupa angka nol atau positif.';
         } else {
             $stmt = $pdo->prepare("INSERT INTO topping (nama_topping, harga_tambahan, status_aktif) VALUES (?, ?, 1)");
             $stmt->execute([$nama, (int) $harga]);
@@ -43,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'edit') {
         $id    = (int) ($_POST['id'] ?? 0);
-        $nama  = trim($_POST['nama_topping'] ?? '');
-        $harga = $_POST['harga_tambahan'] ?? '';
+        $nama  = isset($_POST['nama_topping']) && is_string($_POST['nama_topping']) ? trim($_POST['nama_topping']) : '';
+        $harga = isset($_POST['harga_tambahan']) && is_string($_POST['harga_tambahan']) ? $_POST['harga_tambahan'] : '';
 
         if ($nama === '' || mb_strlen($nama) > 50) {
             $_SESSION['flash_error'] = 'Nama topping wajib diisi (maksimal 50 karakter).';
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
         if (!ctype_digit((string) $harga)) {
-            $_SESSION['flash_error'] = 'Harga tambahan harus berupa angka positif.';
+            $_SESSION['flash_error'] = 'Harga tambahan harus berupa angka nol atau positif.';
             header('Location: topping.php?edit=' . $id);
             exit;
         }
