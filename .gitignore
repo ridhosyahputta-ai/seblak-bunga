@@ -1,3 +1,8 @@
 .DS_Store
 Thumbs.db
 *.log
+
+# Foto topping hasil upload (default.svg tetap dilacak)
+assets/img/topping/*
+!assets/img/topping/default.svg
+!assets/img/topping/.gitkeep
