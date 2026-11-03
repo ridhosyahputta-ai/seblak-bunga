@@ -8,7 +8,7 @@ $stmt = $pdo->prepare("SELECT nilai FROM pengaturan WHERE nama_pengaturan = 'har
 $stmt->execute();
 $harga_dasar = (int) $stmt->fetchColumn();
 
-$stmt = $pdo->query("SELECT nama_topping, harga_tambahan FROM topping WHERE status_aktif = 1 ORDER BY nama_topping ASC");
+$stmt = $pdo->query("SELECT nama_topping, harga_tambahan, foto FROM topping WHERE status_aktif = 1 ORDER BY nama_topping ASC");
 $toppings = $stmt->fetchAll();
 
 include 'includes/header.php';
@@ -35,8 +35,13 @@ include 'includes/header.php';
 
     <div class="topping-grid">
       <?php foreach ($toppings as $t): ?>
-        <?php $confirmed = ($t['nama_topping'] === 'Telur'); ?>
+        <?php
+          $confirmed = ($t['nama_topping'] === 'Telur');
+          $fotoFile  = basename((string) ($t['foto'] ?? ''));
+          $fotoSrc   = 'assets/img/topping/' . (($fotoFile !== '' && is_file(__DIR__ . '/assets/img/topping/' . $fotoFile)) ? rawurlencode($fotoFile) : 'default.svg');
+        ?>
         <div class="topping-chip">
+          <img src="<?= htmlspecialchars($fotoSrc) ?>" alt="<?= htmlspecialchars($t['nama_topping']) ?>" loading="lazy" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;display:block">
           <span class="tp-name"><?= htmlspecialchars($t['nama_topping']) ?></span>
           <span class="tp-price<?= $confirmed ? ' confirmed' : '' ?>">+Rp<?= formatRb($t['harga_tambahan']) ?><?= $confirmed ? '' : '*' ?></span>
         </div>

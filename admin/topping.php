@@ -7,6 +7,53 @@
 require_once '../includes/auth_check.php';
 require_once '../config/database.php';
 
+const FOTO_DIR = __DIR__ . '/../assets/img/topping/';
+const FOTO_MAX_BYTES = 2 * 1024 * 1024;
+
+// Proses upload foto topping (field "foto_upload"). Return [namaFile|null, error|null].
+// namaFile null + error null = tidak ada file yang diunggah.
+function prosesUploadFoto(string $namaTopping): array {
+    $f = $_FILES['foto_upload'] ?? null;
+    if (!$f || !is_array($f) || ($f['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return [null, null];
+    }
+    if ($f['error'] === UPLOAD_ERR_INI_SIZE || $f['error'] === UPLOAD_ERR_FORM_SIZE) {
+        return [null, 'Ukuran foto melebihi batas (maksimal 2MB).'];
+    }
+    if ($f['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($f['tmp_name'])) {
+        return [null, 'Upload foto gagal. Silakan coba lagi.'];
+    }
+    if ($f['size'] > FOTO_MAX_BYTES) {
+        return [null, 'Ukuran foto melebihi batas (maksimal 2MB).'];
+    }
+
+    $ext = strtolower(pathinfo((string) $f['name'], PATHINFO_EXTENSION));
+    $mimeExt = ['image/jpeg' => ['jpg', 'jpeg'], 'image/png' => ['png'], 'image/webp' => ['webp']];
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
+    if (!isset($mimeExt[$mime]) || !in_array($ext, $mimeExt[$mime], true) || @getimagesize($f['tmp_name']) === false) {
+        return [null, 'File harus berupa gambar JPG, PNG, atau WEBP yang valid.'];
+    }
+
+    $slug = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($namaTopping)), '-');
+    $slug = substr($slug !== '' ? $slug : 'topping', 0, 30);
+    $namaFile = 'topping_' . $slug . '_' . time() . '_' . bin2hex(random_bytes(2)) . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
+
+    if (!is_dir(FOTO_DIR) && !mkdir(FOTO_DIR, 0755, true)) {
+        return [null, 'Folder foto tidak bisa dibuat.'];
+    }
+    if (!move_uploaded_file($f['tmp_name'], FOTO_DIR . $namaFile)) {
+        return [null, 'Foto gagal disimpan ke folder assets/img/topping/.'];
+    }
+    return [$namaFile, null];
+}
+
+// Hapus file foto lama hanya kalau hasil upload (prefix topping_); file manual dibiarkan.
+function hapusFotoLama(?string $nama): void {
+    $nama = basename((string) $nama);
+    if (strpos($nama, 'topping_') === 0 && is_file(FOTO_DIR . $nama)) {
+        @unlink(FOTO_DIR . $nama);
+    }
+}
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -33,8 +80,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!ctype_digit((string) $harga)) {
             $_SESSION['flash_error'] = 'Harga tambahan harus berupa angka nol atau positif.';
         } else {
-            $stmt = $pdo->prepare("INSERT INTO topping (nama_topping, harga_tambahan, status_aktif) VALUES (?, ?, 1)");
-            $stmt->execute([$nama, (int) $harga]);
+            [$foto, $fotoErr] = prosesUploadFoto($nama);
+            if ($fotoErr) {
+                $_SESSION['flash_error'] = $fotoErr;
+                header('Location: topping.php');
+                exit;
+            }
+            $stmt = $pdo->prepare("INSERT INTO topping (nama_topping, harga_tambahan, foto, status_aktif) VALUES (?, ?, ?, 1)");
+            $stmt->execute([$nama, (int) $harga, $foto]);
             $_SESSION['flash_success'] = "Topping \"$nama\" berhasil ditambahkan.";
         }
         header('Location: topping.php');
@@ -56,9 +109,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: topping.php?edit=' . $id);
             exit;
         }
+        $cek = $pdo->prepare("SELECT foto FROM topping WHERE id = ?");
+        $cek->execute([$id]);
+        $lama = $cek->fetch();
+        if (!$lama) {
+            $_SESSION['flash_error'] = 'Topping tidak ditemukan.';
+            header('Location: topping.php');
+            exit;
+        }
+        $fotoLama = $lama['foto'];
 
-        $stmt = $pdo->prepare("UPDATE topping SET nama_topping = ?, harga_tambahan = ? WHERE id = ?");
-        $stmt->execute([$nama, (int) $harga, $id]);
+        // Tanpa file baru & tanpa centang hapus: foto lama dipertahankan.
+        [$fotoBaru, $fotoErr] = prosesUploadFoto($nama);
+        if ($fotoErr) {
+            $_SESSION['flash_error'] = $fotoErr;
+            header('Location: topping.php?edit=' . $id);
+            exit;
+        }
+
+        if ($fotoBaru !== null) {
+            $foto = $fotoBaru;
+        } elseif (!empty($_POST['hapus_foto'])) {
+            $foto = null;
+        } else {
+            $foto = $fotoLama;
+        }
+
+        $stmt = $pdo->prepare("UPDATE topping SET nama_topping = ?, harga_tambahan = ?, foto = ? WHERE id = ?");
+        $stmt->execute([$nama, (int) $harga, $foto, $id]);
+        if ($foto !== $fotoLama) {
+            hapusFotoLama($fotoLama);
+        }
 
         if ($stmt->rowCount() === 0) {
             // rowCount 0 juga bisa berarti "ketemu tapi nilainya sama persis",
@@ -144,7 +225,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 $editTopping = null;
 if (isset($_GET['edit'])) {
     $editId = (int) $_GET['edit'];
-    $stmt = $pdo->prepare("SELECT id, nama_topping, harga_tambahan FROM topping WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, nama_topping, harga_tambahan, foto FROM topping WHERE id = ?");
     $stmt->execute([$editId]);
     $editTopping = $stmt->fetch();
     if (!$editTopping) {
@@ -159,11 +240,11 @@ if (isset($_GET['edit'])) {
 // (sama alasannya kayak "topping terlaris" di laporan.php).
 // ------------------------------------------------------------
 $stmt = $pdo->query("
-    SELECT tp.id, tp.nama_topping, tp.harga_tambahan, tp.status_aktif,
+    SELECT tp.id, tp.nama_topping, tp.harga_tambahan, tp.foto, tp.status_aktif,
            COUNT(dt.id) AS jumlah_dipakai
     FROM topping tp
     LEFT JOIN transaksi_detail_topping dt ON dt.id_topping = tp.id
-    GROUP BY tp.id, tp.nama_topping, tp.harga_tambahan, tp.status_aktif
+    GROUP BY tp.id, tp.nama_topping, tp.harga_tambahan, tp.foto, tp.status_aktif
     ORDER BY tp.nama_topping ASC
 ");
 $toppings = $stmt->fetchAll();
@@ -179,6 +260,7 @@ $extra_style = <<<CSS
   .btn-toggle-on { background: #EFEAE0; color: var(--text-secondary); }
   .btn-toggle-off { background: #E4EEE0; color: var(--accent-3); }
   .aksi-cell form { margin: 0; }
+  .thumb-topping { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; display: block; }
 
   .cancel-link {
     display: inline-flex; align-items: center; min-height: 44px;
@@ -198,7 +280,7 @@ require_once '../includes/admin-header.php';
   <?php if ($editTopping): ?>
     <div class="card">
       <h2>edit topping</h2>
-      <form method="POST" action="topping.php">
+      <form method="POST" action="topping.php" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="edit">
         <input type="hidden" name="id" value="<?= (int) $editTopping['id'] ?>">
@@ -213,6 +295,19 @@ require_once '../includes/admin-header.php';
             <input type="number" name="harga_tambahan" min="0" step="1" required
                    value="<?= (int) $editTopping['harga_tambahan'] ?>">
           </div>
+          <div>
+            <label>Foto (opsional, JPG/PNG/WEBP, maks 2MB)</label>
+            <?php $ef = basename((string) ($editTopping['foto'] ?? '')); $efAda = $ef !== '' && is_file(FOTO_DIR . $ef); ?>
+            <?php if ($efAda): ?>
+              <img class="thumb-topping" src="../assets/img/topping/<?= htmlspecialchars(rawurlencode($ef)) ?>" alt="Foto saat ini" style="margin-bottom:8px">
+            <?php endif; ?>
+            <input type="file" name="foto_upload" accept="image/png, image/jpeg, image/jpg, image/webp">
+            <?php if ($efAda): ?>
+              <label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-top:8px">
+                <input type="checkbox" name="hapus_foto" value="1"> Hapus foto (kembali ke default)
+              </label>
+            <?php endif; ?>
+          </div>
         </div>
         <button type="submit" class="btn-primary">Simpan Perubahan</button>
       </form>
@@ -221,7 +316,7 @@ require_once '../includes/admin-header.php';
   <?php else: ?>
     <div class="card">
       <h2>tambah topping baru</h2>
-      <form method="POST" action="topping.php">
+      <form method="POST" action="topping.php" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="tambah">
         <div class="form-row">
@@ -232,6 +327,10 @@ require_once '../includes/admin-header.php';
           <div>
             <label>Harga tambahan (Rp)</label>
             <input type="number" name="harga_tambahan" min="0" step="1" required placeholder="mis. 3000">
+          </div>
+          <div>
+            <label>Foto (opsional, JPG/PNG/WEBP, maks 2MB)</label>
+            <input type="file" name="foto_upload" accept="image/png, image/jpeg, image/jpg, image/webp">
           </div>
         </div>
         <button type="submit" class="btn-primary">Tambah Topping</button>
@@ -247,12 +346,18 @@ require_once '../includes/admin-header.php';
       <div class="table-scroll">
         <table>
           <thead>
-            <tr><th>Nama</th><th class="num">Harga</th><th>Status</th><th>Dipakai</th><th>Aksi</th></tr>
+            <tr><th>Foto</th><th>Nama</th><th class="num">Harga</th><th>Status</th><th>Dipakai</th><th>Aksi</th></tr>
           </thead>
           <tbody>
             <?php foreach ($toppings as $t): ?>
               <?php $aktif = (int) $t['status_aktif'] === 1; $dipakai = (int) $t['jumlah_dipakai']; ?>
+              <?php
+                $fotoFile = basename((string) ($t['foto'] ?? ''));
+                $fotoAda  = $fotoFile !== '' && is_file(__DIR__ . '/../assets/img/topping/' . $fotoFile);
+                $fotoSrc  = '../assets/img/topping/' . ($fotoAda ? rawurlencode($fotoFile) : 'default.svg');
+              ?>
               <tr>
+                <td><img class="thumb-topping" src="<?= htmlspecialchars($fotoSrc) ?>" alt="" loading="lazy"></td>
                 <td><?= htmlspecialchars($t['nama_topping']) ?></td>
                 <td class="num">Rp<?= number_format((int) $t['harga_tambahan'], 0, ',', '.') ?></td>
                 <td><span class="badge <?= $aktif ? 'badge-aktif' : 'badge-nonaktif' ?>"><?= $aktif ? 'Aktif' : 'Nonaktif' ?></span></td>

@@ -311,3 +311,25 @@ Dewi, ini sebaiknya diganti jadi kolom boolean asli di skema
 `topping`, karena hardcode string match gampang typo (nama topping
 diketik beda dikit, flag-nya diam-diam gak nyala) dan gak scalable
 kalau daftar topping yang confirmed makin banyak.
+
+## Migrasi 002 -- Foto Topping (`migrations/002_add_foto_to_topping.sql`)
+
+Menambah kolom `topping.foto VARCHAR(100) NULL` (setelah `harga_tambahan`)
+berisi **nama file saja** (mis. `telur.jpg`). Migrasi ini harus dijalankan
+manual satu kali pada database aktif (backup dulu); `schema.sql` tidak
+diubah dan database aktif tidak diimpor ulang. **Jalankan migrasi sebelum
+memakai `menu.php` / `admin/topping.php` versi baru**, karena keduanya
+sekarang meng-SELECT kolom `foto`.
+
+- Foto diunggah lewat form tambah/edit di `admin/topping.php` (field `foto_upload`, form `multipart/form-data`).
+  Validasi: ekstensi jpg/jpeg/png/webp, MIME asli (`finfo`) + `getimagesize`, maks 2MB.
+  File disimpan sebagai `topping_<slug>_<timestamp>_<acak>.<ext>` di `assets/img/topping/`.
+- Edit tanpa memilih file baru mempertahankan foto lama; checkbox "Hapus foto" mengosongkan kolom ke `NULL` (default).
+  File lama hasil upload (prefix `topping_`) ikut dihapus saat diganti/dihapus; file manual tidak pernah dihapus.
+- Fallback: kalau kolom `foto` kosong atau file fisik tidak ada, tampil
+  `assets/img/topping/default.svg`. Pengecekan memakai `basename()` +
+  `is_file()` supaya tidak bisa keluar dari folder topping.
+- `menu.php`: `<img>` di kartu `topping-chip` (inline style, rasio 1:1,
+  `object-fit: cover`); CSS global di `includes/header.php` tidak diubah.
+- `admin/topping.php`: kolom thumbnail 40x40px, rounded, `object-fit: cover`.
+- `admin/transaksi.php` tidak disentuh.
