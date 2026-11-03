@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Nomor HP pelanggan tidak valid.';
     }
     if ($metode_bayar === 'utang' && $pelanggan_mode === 'none') {
-        $errors[] = 'Transaksi utang wajib pilih pelanggan (existing atau baru) supaya jelas piutangnya ke siapa.';
+        $errors[] = 'Metode bayar utang wajib mencatat identitas pelanggan (pelanggan lama atau baru).';
     }
 
     // -- Validasi & bersihin data porsi --
@@ -477,7 +477,25 @@ require_once '../includes/admin-header.php';
     r.addEventListener('change', syncPelangganBlocks);
   });
 
+  // Metode Utang: opsi 'Pembeli lewat' dimatikan (piutang harus punya identitas).
+  // Kalau sedang terpilih, dialihkan ke Pelanggan lama (kalau ada datanya) atau baru.
+  function syncMetodeBayar() {
+    var utang = document.querySelector('input[name=metode_bayar]:checked').value === 'utang';
+    var none = document.querySelector('input[name=pelanggan_mode][value=none]');
+    none.disabled = utang;
+    if (utang && none.checked) {
+      var sel = document.querySelector('select[name=id_pelanggan]');
+      var adaPelanggan = sel && Array.prototype.some.call(sel.options, function (o) { return o.value !== ''; });
+      document.querySelector('input[name=pelanggan_mode][value=' + (adaPelanggan ? 'existing' : 'baru') + ']').checked = true;
+      syncPelangganBlocks();
+    }
+  }
+  document.querySelectorAll('input[name=metode_bayar]').forEach(function (r) {
+    r.addEventListener('change', syncMetodeBayar);
+  });
+
   syncPelangganBlocks();
+  syncMetodeBayar();
   renumber();
   calcGrandTotal();
 })();
