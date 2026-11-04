@@ -45,7 +45,7 @@ $extra_style = <<<'CSS'
   .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:20px; }
   .summary-box { background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:16px; }
   .summary-label { color:var(--text-secondary); font-size:12px; }
-  .summary-value { font-family:'Anton',sans-serif; font-size:22px; margin-top:4px; }
+  .summary-value { font-family:'Anton', Impact, system-ui, sans-serif; font-size:22px; margin-top:4px; }
 CSS;
 require_once '../includes/admin-header.php';
 ?>

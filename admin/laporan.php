@@ -49,7 +49,7 @@ $extra_style = <<<'CSS'
   .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
   .summary-box { background:var(--bg); border-radius:12px; padding:14px 16px; }
   .summary-box .sb-label { font-size:11.5px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.03em; }
-  .summary-box .sb-value { font-family:'Anton',sans-serif; font-size:21px; margin-top:4px; }
+  .summary-box .sb-value { font-family:'Anton', Impact, system-ui, sans-serif; font-size:21px; margin-top:4px; }
   .summary-box .sb-note { font-size:11px; color:var(--text-secondary); margin-top:4px; }
   .summary-box.accent .sb-value { color:var(--accent); }
   .summary-box.accent3 .sb-value { color:var(--accent-3); }

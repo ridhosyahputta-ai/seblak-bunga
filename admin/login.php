@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login Admin  Seblak Bunga</title>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/fonts.css">
 <style>
   :root {
     --bg: #F5EDE0; --text: #2B2420; --text-secondary: #6B6459;
@@ -64,26 +64,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   * { box-sizing: border-box; }
   body {
     margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif;
+    background: var(--bg); color: var(--text); font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   .login-card {
     background: #FFFCF6; border: 1px solid var(--border); border-radius: 18px;
     padding: 36px 30px; width: 100%; max-width: 360px; margin: 20px;
   }
   .login-card h1 {
-    font-family: 'Anton', sans-serif; font-size: 24px; text-transform: lowercase;
+    font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; font-size: 24px; text-transform: lowercase;
     margin: 0 0 4px; text-align: center;
   }
   .login-card p.sub { text-align: center; font-size: 13px; color: var(--text-secondary); margin: 0 0 26px; }
   label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 6px; }
   input {
     width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border);
-    font-family: 'Poppins'; font-size: 14px; margin-bottom: 16px; background: var(--bg); color: var(--text);
+    font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; margin-bottom: 16px; background: var(--bg); color: var(--text);
   }
   input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   button {
     width: 100%; padding: 12px; border: none; border-radius: 100px;
-    background: var(--accent); color: #FFF8EF; font-family: 'Poppins'; font-weight: 500; font-size: 14px;
+    background: var(--accent); color: #FFF8EF; font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-weight: 500; font-size: 14px;
     cursor: pointer;
   }
   button:hover { background: var(--accent-dark); }

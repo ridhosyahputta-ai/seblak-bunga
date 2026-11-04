@@ -61,7 +61,7 @@ $page_title = 'Manajemen Piutang';
 $active_page = 'piutang';
 $extra_style = <<<'CSS'
   .summary-total { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
-  .summary-total .st-value { font-family:'Anton',sans-serif; font-size:24px; color:var(--accent); }
+  .summary-total .st-value { font-family:'Anton', Impact, system-ui, sans-serif; font-size:24px; color:var(--accent); }
   .search-form { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
   .search-form input { flex:1; min-width:200px; }
   .search-form button { background:var(--accent-3); color:#FFF8EF; }

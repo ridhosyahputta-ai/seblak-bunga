@@ -333,3 +333,12 @@ sekarang meng-SELECT kolom `foto`.
   `object-fit: cover`); CSS global di `includes/header.php` tidak diubah.
 - `admin/topping.php`: kolom thumbnail 40x40px, rounded, `object-fit: cover`.
 - `admin/transaksi.php` tidak disentuh.
+
+## Aset Offline 100% (Font Lokal & Fallback Sistem)
+
+Untuk menjamin sistem kasir dan website publik dapat berjalan 100% tanpa koneksi internet (offline):
+- Seluruh dependensi Google Fonts (`Anton`, `Poppins`, `Caveat`) telah diunduh ke folder `assets/fonts/` (format `.woff2`).
+- Disediakan `assets/css/fonts.css` yang mendefinisikan `@font-face` lokal relatif ke `../fonts/`.
+- Seluruh tag `<link>` CDN online di `includes/header.php`, `includes/admin-header.php`, dan `admin/login.php` dialihkan ke `assets/css/fonts.css` (atau `../assets/css/fonts.css` untuk folder admin).
+- Seluruh deklarasi `font-family` dilengkapi fallback font sistem yang aman (`system-ui`, `-apple-system`, `"Segoe UI"`, `Roboto`, `sans-serif` dan fallback display `Impact`, `cursive`, `"Segoe Print"`).
+- Tidak ada dependensi framework CSS/JS eksternal (Bootstrap/FontAwesome); seluruh icon menggunakan inline SVG murni dan JavaScript berbasis vanilla JS.

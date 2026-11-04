@@ -33,9 +33,7 @@ function navClass($page, $active_page) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= $page_title ? htmlspecialchars($page_title) . ' — ' : '' ?>Admin Seblak Bunga</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/fonts.css">
 <style>
   :root {
     --bg: #F5EDE0;
@@ -51,7 +49,7 @@ function navClass($page, $active_page) {
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--text);
-    font-family: 'Poppins', sans-serif; line-height: 1.55; padding-bottom: 50px;
+    font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.55; padding-bottom: 50px;
   }
   .wrap { max-width: <?= (int) $wrap_max ?>px; margin: 0 auto; padding: 0 16px; }
 
@@ -60,9 +58,9 @@ function navClass($page, $active_page) {
   .admin-header .wrap { padding: 16px; }
   .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
   .brand { display: flex; align-items: baseline; gap: 8px; }
-  .brand .brand-name { font-family: 'Anton', sans-serif; font-size: 16px; text-transform: lowercase; }
-  .brand .brand-tag { font-family: 'Caveat', cursive; font-size: 16px; color: var(--accent-3); }
-  h1.page-title { font-family: 'Anton', sans-serif; text-transform: lowercase; font-size: 22px; margin: 0; }
+  .brand .brand-name { font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; font-size: 16px; text-transform: lowercase; }
+  .brand .brand-tag { font-family: 'Caveat', cursive, "Segoe Print", sans-serif; font-size: 16px; color: var(--accent-3); }
+  h1.page-title { font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; text-transform: lowercase; font-size: 22px; margin: 0; }
 
   nav.admin-nav { display: flex; gap: 8px; flex-wrap: wrap; }
   nav.admin-nav a {
@@ -83,7 +81,7 @@ function navClass($page, $active_page) {
 
   /* ---------- Komponen umum dipakai di banyak halaman admin ---------- */
   .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-  .card h2 { font-family: 'Anton', sans-serif; text-transform: lowercase; font-size: 17px; margin: 0 0 14px; }
+  .card h2 { font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; text-transform: lowercase; font-size: 17px; margin: 0 0 14px; }
 
   label { font-size: 13.5px; font-weight: 600; display: block; margin: 14px 0 7px; }
   label .opt { font-weight: 400; color: var(--text-secondary); }
@@ -91,7 +89,7 @@ function navClass($page, $active_page) {
   input[type=text], input[type=tel], input[type=number], input[type=date],
   input[type=password], select {
     width: 100%; min-height: 46px; padding: 11px 14px; border-radius: 10px;
-    border: 1.5px solid var(--border); font-family: 'Poppins'; font-size: 14.5px;
+    border: 1.5px solid var(--border); font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14.5px;
     background: var(--bg); color: var(--text);
   }
   input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -109,7 +107,7 @@ function navClass($page, $active_page) {
 
   /* Tombol */
   button, .btn {
-    border: none; border-radius: 100px; font-family: 'Poppins'; font-weight: 500; cursor: pointer;
+    border: none; border-radius: 100px; font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-weight: 500; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
     min-height: 44px; padding: 0 18px; font-size: 13.5px;
   }
