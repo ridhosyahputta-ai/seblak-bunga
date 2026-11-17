@@ -255,7 +255,7 @@ $extra_style = <<<CSS
   .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
   .form-row > div { flex: 1; min-width: 160px; }
 
-  .form-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .form-actions { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
   .btn-submit-topping {
     width: auto;
     min-height: 42px;

@@ -44,7 +44,7 @@ $old = [
     'pelanggan_nama' => '',
     'pelanggan_hp'   => '',
     'catatan'        => '',
-    'item'           => [['level_pedas' => '', 'topping' => []]],
+    'item'           => [['level_pedas' => 'Level 1', 'topping' => []]],
 ];
 
 // ------------------------------------------------------------
@@ -116,9 +116,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             continue;
         }
         $level = trim((string) ($row['level_pedas'] ?? ''));
-        $level = ($level === '') ? null : $level;
-        if ($level !== null && mb_strlen($level) > 50) {
-            $errors[] = 'Level pedas maksimal 50 karakter.';
+        if (in_array($level, ['1', '2', '3', '4'], true)) {
+            $level = 'Level ' . $level;
+        }
+        if (!in_array($level, ['Level 1', 'Level 2', 'Level 3', 'Level 4'], true)) {
+            $errors[] = 'Pilihan level pedas tidak valid (hanya Level 1 sampai Level 4).';
             continue;
         }
 
@@ -231,10 +233,18 @@ function renderItemRow($index, array $data, array $toppings, array $selectedTopp
         <button type="button" class="btn-remove-item" title="Hapus porsi ini">&times;</button>
       </div>
 
-      <label>Level pedas <span class="opt">(bebas, boleh kosong)</span></label>
-      <input type="text" name="item[<?= $index ?>][level_pedas]" maxlength="50"
-             value="<?= htmlspecialchars($data['level_pedas'] ?? '') ?>"
-             placeholder="mis. sedang, extra pedas, gak pedas">
+      <label>Level pedas</label>
+      <?php
+        $curLevel = $data['level_pedas'] ?? 'Level 1';
+        if ($curLevel === '' || $curLevel === null) {
+            $curLevel = 'Level 1';
+        }
+      ?>
+      <select name="item[<?= $index ?>][level_pedas]">
+        <?php foreach (['Level 1', 'Level 2', 'Level 3', 'Level 4'] as $lvl): ?>
+          <option value="<?= $lvl ?>" <?= ($curLevel === $lvl || $curLevel === substr($lvl, -1)) ? 'selected' : '' ?>><?= $lvl ?></option>
+        <?php endforeach; ?>
+      </select>
 
       <label>Topping</label>
       <div class="topping-check-grid">
@@ -298,7 +308,7 @@ $extra_style = <<<CSS
   .grand-total .gt-label { font-size: 13.5px; color: var(--text-secondary); }
   .grand-total .gt-value { font-family: 'Anton', sans-serif; font-size: 22px; }
 
-  .form-actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+  .form-actions { display: flex; justify-content: center; margin-top: 18px; }
   .btn-simpan-transaksi {
     width: auto;
     min-height: 44px;
