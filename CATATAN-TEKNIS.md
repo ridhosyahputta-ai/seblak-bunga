@@ -342,3 +342,11 @@ Untuk menjamin sistem kasir dan website publik dapat berjalan 100% tanpa koneksi
 - Seluruh tag `<link>` CDN online di `includes/header.php`, `includes/admin-header.php`, dan `admin/login.php` dialihkan ke `assets/css/fonts.css` (atau `../assets/css/fonts.css` untuk folder admin).
 - Seluruh deklarasi `font-family` dilengkapi fallback font sistem yang aman (`system-ui`, `-apple-system`, `"Segoe UI"`, `Roboto`, `sans-serif` dan fallback display `Impact`, `cursive`, `"Segoe Print"`).
 - Tidak ada dependensi framework CSS/JS eksternal (Bootstrap/FontAwesome); seluruh icon menggunakan inline SVG murni dan JavaScript berbasis vanilla JS.
+
+## Perbaikan UI (Proporsi Tombol & Tekstur Latar Belakang)
+
+Berdasarkan masukan penguji terkait proporsi visual dan estetika ruang kosong:
+- **Tekstur Latar Belakang (CSS Murni & 100% Offline):** Pada `body` (`includes/header.php`, `includes/admin-header.php`, dan `admin/login.php`) ditambahkan pola *subtle radial-gradient dot pattern* dengan palet warna dasar `--bg` dan dot `rgba(43, 36, 32, 0.07)` berjarak 18px. Ruang kosong luar kontainer menjadi lebih bertekstur, hangat, dan tidak polos, tanpa mengganggu keterbacaan kartu karena kontainer tetap menggunakan solid background (`--bg-card`).
+- **Proporsi Tombol Transaksi (`admin/transaksi.php`):** Tombol "Simpan Transaksi" tidak lagi membentang penuh 100% secara kaku di layar lebar. Tombol dibungkus dalam `.form-actions` dengan perataan kanan, ukuran ringkas proporsional (`min-height: 44px`, padding `12px 28px`, `font-size: 0.95rem`), serta otomatis fleksibel 100% pada layar ponsel (`max-width: 480px`).
+- **Proporsi Tombol & Tabel Topping (`admin/topping.php`):** Tombol form "Tambah Topping" dan "Simpan Perubahan" disesuaikan proporsinya (`min-height: 42px`, padding `10px 24px`), serta tautan batal diletakkan sejajar di dalam kontainer aksi. Tombol aksi di tabel data topping ("Edit", "Aktifkan/Nonaktifkan", "Hapus") dirapikan menjadi lebih padat (`min-height: 32px`, padding `0 12px`, radius 8px) sehingga baris tabel tidak membengkak tinggi.
+- Alur transaksi, logika piutang, validasi input, kalkulasi harga, dan skema database tetap 100% utuh tanpa perubahan.

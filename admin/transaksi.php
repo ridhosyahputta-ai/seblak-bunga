@@ -297,6 +297,17 @@ $extra_style = <<<CSS
   .grand-total { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
   .grand-total .gt-label { font-size: 13.5px; color: var(--text-secondary); }
   .grand-total .gt-value { font-family: 'Anton', sans-serif; font-size: 22px; }
+
+  .form-actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+  .btn-simpan-transaksi {
+    width: auto;
+    min-height: 44px;
+    padding: 12px 28px;
+    font-size: 0.95rem;
+  }
+  @media (max-width: 480px) {
+    .btn-simpan-transaksi { width: 100%; }
+  }
 CSS;
 require_once '../includes/admin-header.php';
 ?>
@@ -374,7 +385,9 @@ require_once '../includes/admin-header.php';
       </div>
     </div>
 
-    <button type="submit" class="btn-primary" style="margin-top:18px;">Simpan Transaksi</button>
+    <div class="form-actions">
+      <button type="submit" class="btn-primary btn-simpan-transaksi">Simpan Transaksi</button>
+    </div>
   </form>
 
   <div class="card">

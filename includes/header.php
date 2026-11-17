@@ -29,7 +29,9 @@ function navClass($page, $active_page) {
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    background: var(--bg);
+    background-color: var(--bg);
+    background-image: radial-gradient(rgba(43, 36, 32, 0.065) 0.85px, transparent 0.85px);
+    background-size: 18px 18px;
     color: var(--text);
     font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     line-height: 1.6;

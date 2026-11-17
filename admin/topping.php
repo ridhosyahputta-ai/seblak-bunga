@@ -255,7 +255,26 @@ $extra_style = <<<CSS
   .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
   .form-row > div { flex: 1; min-width: 160px; }
 
-  .aksi-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+  .form-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .btn-submit-topping {
+    width: auto;
+    min-height: 42px;
+    padding: 10px 24px;
+    font-size: 0.95rem;
+  }
+  @media (max-width: 480px) {
+    .btn-submit-topping { width: 100%; }
+  }
+
+  .aksi-cell { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .aksi-cell .btn,
+  .aksi-cell button {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    font-weight: 500;
+  }
   .btn-edit { background: var(--bg-card); border: 1.5px solid var(--border); color: var(--text); }
   .btn-toggle-on { background: #EFEAE0; color: var(--text-secondary); }
   .btn-toggle-off { background: #E4EEE0; color: var(--accent-3); }
@@ -263,8 +282,8 @@ $extra_style = <<<CSS
   .thumb-topping { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; display: block; }
 
   .cancel-link {
-    display: inline-flex; align-items: center; min-height: 44px;
-    font-size: 12.5px; color: var(--text-secondary);
+    display: inline-flex; align-items: center; min-height: 42px;
+    font-size: 13px; color: var(--text-secondary);
   }
 CSS;
 require_once '../includes/admin-header.php';
@@ -309,9 +328,11 @@ require_once '../includes/admin-header.php';
             <?php endif; ?>
           </div>
         </div>
-        <button type="submit" class="btn-primary">Simpan Perubahan</button>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary btn-submit-topping">Simpan Perubahan</button>
+          <a class="cancel-link" href="topping.php">← Batal, kembali ke daftar</a>
+        </div>
       </form>
-      <a class="cancel-link" href="topping.php">← Batal, kembali ke daftar</a>
     </div>
   <?php else: ?>
     <div class="card">
@@ -333,7 +354,9 @@ require_once '../includes/admin-header.php';
             <input type="file" name="foto_upload" accept="image/png, image/jpeg, image/jpg, image/webp">
           </div>
         </div>
-        <button type="submit" class="btn-primary">Tambah Topping</button>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary btn-submit-topping">Tambah Topping</button>
+        </div>
       </form>
     </div>
   <?php endif; ?>

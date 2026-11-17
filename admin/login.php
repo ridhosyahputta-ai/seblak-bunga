@@ -64,7 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   * { box-sizing: border-box; }
   body {
     margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: var(--bg); color: var(--text); font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg);
+    background-image: radial-gradient(rgba(43, 36, 32, 0.07) 0.9px, transparent 0.9px);
+    background-size: 18px 18px;
+    color: var(--text); font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   .login-card {
     background: #FFFCF6; border: 1px solid var(--border); border-radius: 18px;

@@ -48,7 +48,11 @@ function navClass($page, $active_page) {
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
+    margin: 0;
+    background-color: var(--bg);
+    background-image: radial-gradient(rgba(43, 36, 32, 0.07) 0.9px, transparent 0.9px);
+    background-size: 18px 18px;
+    color: var(--text);
     font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.55; padding-bottom: 50px;
   }
   .wrap { max-width: <?= (int) $wrap_max ?>px; margin: 0 auto; padding: 0 16px; }
@@ -111,7 +115,7 @@ function navClass($page, $active_page) {
     display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
     min-height: 44px; padding: 0 18px; font-size: 13.5px;
   }
-  .btn-primary { background: var(--accent); color: #FFF8EF; font-size: 15px; min-height: 50px; width: 100%; }
+  .btn-primary { background: var(--accent); color: #FFF8EF; font-size: 14.5px; min-height: 44px; padding: 10px 24px; width: auto; }
   .btn-primary:hover { background: var(--accent-dark); }
   .btn-secondary { background: var(--bg-card); border: 1.5px solid var(--border); color: var(--text); }
   .btn-secondary:hover { border-color: var(--accent); }
