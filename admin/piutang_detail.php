@@ -166,9 +166,9 @@ $extra_style = <<<CSS
   .pelanggan-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
   .pelanggan-head .ph-name { font-weight: 600; font-size: 15px; }
   .pelanggan-head .ph-hp { color: var(--text-secondary); font-size: 12.5px; }
-  .pelanggan-head .ph-sisa { font-family: 'Anton', Impact, system-ui, sans-serif; font-size: 22px; color: var(--accent); }
+  .pelanggan-head .ph-sisa { font-family: 'Anton', Impact, system-ui, sans-serif; font-size: 22px; color: var(--accent); letter-spacing: 0.04em; }
 
-  .nota-card { border: 1px dashed var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .nota-card { border: 1.5px dashed #C8BC9F; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
   .nota-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
   .nota-kode { font-weight: 600; font-size: 13.5px; }
   .nota-tanggal { color: var(--text-secondary); font-size: 12px; }

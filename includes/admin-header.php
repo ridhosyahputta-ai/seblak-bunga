@@ -38,13 +38,13 @@ function navClass($page, $active_page) {
   :root {
     --bg: #F5EDE0;
     --bg-card: #FFFCF6;
-    --text: #2B2420;
-    --text-secondary: #6B6459;
+    --text: #1F2937;
+    --text-secondary: #4B5563;
     --accent: #C1372A;
     --accent-dark: #8F2A20;
     --accent-2: #E8A33D;
     --accent-3: #4A7A3C;
-    --border: rgba(43,36,32,0.14);
+    --border: #C8BC9F;
   }
   * { box-sizing: border-box; }
   body {
@@ -58,13 +58,13 @@ function navClass($page, $active_page) {
   .wrap { max-width: <?= (int) $wrap_max ?>px; margin: 0 auto; padding: 0 16px; }
 
   /* ---------- Header & navigasi ---------- */
-  .admin-header { background: var(--bg-card); border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+  .admin-header { background: var(--bg-card); border-bottom: 1.5px solid var(--border); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); margin-bottom: 22px; }
   .admin-header .wrap { padding: 16px; }
   .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
   .brand { display: flex; align-items: baseline; gap: 8px; }
-  .brand .brand-name { font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; font-size: 16px; text-transform: lowercase; }
+  .brand .brand-name { font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; font-size: 16px; letter-spacing: 0.04em; text-transform: capitalize; }
   .brand .brand-tag { font-family: 'Caveat', cursive, "Segoe Print", sans-serif; font-size: 16px; color: var(--accent-3); }
-  h1.page-title { font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; text-transform: lowercase; font-size: 22px; margin: 0; }
+  h1.page-title { font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; letter-spacing: 0.04em; text-transform: capitalize; font-size: 22px; margin: 0; }
 
   nav.admin-nav { display: flex; gap: 8px; flex-wrap: wrap; }
   nav.admin-nav a {
@@ -84,26 +84,58 @@ function navClass($page, $active_page) {
   }
 
   /* ---------- Komponen umum dipakai di banyak halaman admin ---------- */
-  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-  .card h2 { font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; text-transform: lowercase; font-size: 17px; margin: 0 0 14px; }
+  h1, h2, h3 {
+    font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
+  }
 
-  label { font-size: 13.5px; font-weight: 600; display: block; margin: 14px 0 7px; }
+  .card {
+    background: var(--bg-card);
+    border: 1.5px solid #C8BC9F;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
+    font-size: 17px;
+    margin: 0 0 14px;
+  }
+
+  /* Angka nominal besar dan ringkasan di area admin */
+  .summary-value, .st-value, .ph-sisa, .gt-value, .grand-total .gt-value, .sb-value, .stat-value, .qris-total-value {
+    letter-spacing: 0.04em;
+  }
+  .summary-box {
+    border: 1.5px solid #C8BC9F;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  }
+
+  label { font-size: 13.5px; font-weight: 600; display: block; margin: 14px 0 7px; color: var(--text); }
   label .opt { font-weight: 400; color: var(--text-secondary); }
 
   input[type=text], input[type=tel], input[type=number], input[type=date],
-  input[type=password], select {
+  input[type=password], select, textarea {
     width: 100%; min-height: 46px; padding: 11px 14px; border-radius: 10px;
-    border: 1.5px solid var(--border); font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14.5px;
+    border: 1.5px solid #C8BC9F;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14.5px;
     background: var(--bg); color: var(--text);
   }
-  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
   /* Radio besar berbentuk kartu -- dipakai buat metode bayar, pelanggan_mode, dll. */
   .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
   .radio-group label {
     display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 500; font-size: 14px;
-    min-height: 44px; padding: 0 14px; border: 1.5px solid var(--border); border-radius: 12px;
+    min-height: 44px; padding: 0 14px; border: 1.5px solid #C8BC9F; border-radius: 12px;
     background: var(--bg-card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    color: var(--text);
   }
   .radio-group input[type=radio] { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
 
@@ -117,16 +149,17 @@ function navClass($page, $active_page) {
   }
   .btn-primary { background: var(--accent); color: #FFF8EF; font-size: 14.5px; min-height: 44px; padding: 10px 24px; width: auto; }
   .btn-primary:hover { background: var(--accent-dark); }
-  .btn-secondary { background: var(--bg-card); border: 1.5px solid var(--border); color: var(--text); }
+  .btn-secondary { background: var(--bg-card); border: 1.5px solid #C8BC9F; color: var(--text); }
   .btn-secondary:hover { border-color: var(--accent); }
   .btn-danger { background: #FBE4E1; color: var(--accent-dark); }
   .btn-danger:hover { background: #F6D0CB; }
 
   /* Tabel -- overflow-x:auto biar tabel lebar gak ngerusak layout di HP. */
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { width: 100%; min-width: 480px; border-collapse: collapse; font-size: 13px; }
+  table { width: 100%; min-width: 480px; border-collapse: collapse; font-size: 13px; color: var(--text); }
   th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  th { color: var(--text-secondary); font-weight: 600; font-size: 12px; white-space: nowrap; }
+  th { color: #374151; font-weight: 600; font-size: 12px; white-space: nowrap; }
+  td { color: var(--text); }
   td.num, th.num { text-align: right; }
 
   .badge { display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; white-space: nowrap; }

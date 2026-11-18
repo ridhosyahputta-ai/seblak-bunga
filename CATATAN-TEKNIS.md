@@ -53,12 +53,14 @@ untuk preview total di layar kasir; kalau ada yang iseng ubah lewat
 DevTools atau kirim request manual, hitungan final tetap pakai harga
 asli dari database.
 
-**Kenapa id_pelanggan nullable:** `id_pelanggan` di tabel `transaksi`
-sengaja nullable — pembeli lewat (jajan sekali, bayar tunai/QRIS) gak
-perlu dicatat identitasnya. Pelanggan baru dicatat kalau memang perlu
-ditelusuri lagi nanti — yang wajib itu transaksi metode 'utang',
-karena Teh Dewi perlu tau piutang itu punya siapa untuk ditagih (lihat
-tabel `pembayaran_piutang`).
+**Penyederhanaan Tipe Pelanggan & Catatan:** Form kasir disederhanakan
+hanya memiliki 2 opsi tipe pelanggan: "Pelanggan baru" (default terpilih)
+dan "Pelanggan lama" (dropdown terdaftar). Opsi "Pembeli lewat" dihilangkan
+agar kasir selalu mencatat identitas pemesan dengan rapi. Untuk metode
+'utang', validasi mewajibkan nama dan nomor HP (baik pelanggan baru maupun
+pelanggan lama) agar piutang dapat ditagih. Input "Catatan" juga dihapus
+dari UI demi efisiensi proses kasir, sementara kolom `catatan` pada tabel
+`transaksi` diisi nilai `null` sehingga kompatibel tanpa merombak skema DB.
 
 **Validasi topping saat submit:** id topping yang gak ada di
 `$toppingMap` (misal id topping yang sudah dinonaktifkan, atau id
@@ -358,4 +360,10 @@ Berdasarkan masukan penguji terkait proporsi visual dan estetika ruang kosong:
   - Penutupan modal didukung via tombol "Batal", tombol "X", klik backdrop luar, maupun tombol `Esc`.
 - **Validasi Harga Topping (`admin/topping.php`):** Validasi backend PHP (tambah & edit) diperketat mewajibkan harga lebih dari 0 (`(int)$harga <= 0` ditolak dengan pesan informatif `"Harga topping harus lebih dari Rp 0."`), serta atribut HTML5 input angka diperbarui menjadi `min="1"`.
 - **Urutan Bagian Form Transaksi (`admin/transaksi.php`):** Blok card **Porsi Seblak** (porsi, level pedas, topping, subtotal) diposisikan di atas blok card **Pembayaran** (metode bayar, tipe pelanggan, catatan) agar selaras dengan alur kasir: meracik pesanan terlebih dahulu sebelum menentukan pembayaran.
+- **Penyempurnaan Kontras & Keterbacaan Admin untuk Proyektor (Masukan Pak Didit):**
+  - **Khusus Area Admin:** Penyesuaian CSS hanya diterapkan pada `includes/admin-header.php` dan `admin/login.php` (serta style pendukung di halaman `admin/*`), tanpa mengubah satu pun tampilan halaman publik (`index.php`, `menu.php`, dll.).
+  - **Keterbacaan Heading Anton & Angka Nominal:** Seluruh heading (`h1`, `h2`, `h3`, `.card h2`, `.page-title`) dan angka nominal besar (`.summary-value`, `.st-value`, `.ph-sisa`, `.gt-value`, `.sb-value`, `.qris-total-value`) diberikan `letter-spacing: 0.04em;` dan diubah menjadi `text-transform: capitalize;` agar huruf seperti `i` dan `u` (mis. "Total Piutang Berjalan") tidak saling menempel dan terbaca jelas di proyektor.
+  - **Kontras Kartu & Form Input:** Garis tepi `.card`, `.summary-box`, `.nota-card`, serta elemen form (`input`, `select`, `textarea`, `.radio-group label`) dipertegas dengan `border: 1.5px solid #C8BC9F;` dan bayangan lembut `box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);` agar kartu putih tidak pudar menyatu dengan latar belakang krem saat diproyeksikan.
+  - **Kepekatan Teks Konten:** Warna teks utama dipekatkan menjadi `#1F2937`, teks sekunder/keterangan menjadi `#4B5563`, dan header tabel menjadi `#374151` untuk mencapai rasio kontras tinggi di ruang terang.
+- **Tombol Hapus Topping (`admin/topping.php`):** Tombol "Hapus" kini selalu ditampilkan konsisten di posisi paling kanan kolom Aksi (`Edit` → `Nonaktifkan/Aktifkan` → `Hapus`). Jika topping sudah pernah dipakai pada transaksi (`jumlah_dipakai > 0`), klik tombol akan memunculkan dialog informatif bahwa data transaksi historis harus dijaga sehingga disarankan menggunakan tombol "Nonaktifkan". Jika belum pernah dipakai (`jumlah_dipakai === 0`), sistem mengonfirmasi dan menghapus permanen sekaligus membersihkan file foto terkait.
 - Alur transaksi, logika piutang, validasi input, kalkulasi harga, dan skema database tetap 100% utuh tanpa perubahan.

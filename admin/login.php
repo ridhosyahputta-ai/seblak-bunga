@@ -58,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link rel="stylesheet" href="../assets/css/fonts.css">
 <style>
   :root {
-    --bg: #F5EDE0; --text: #2B2420; --text-secondary: #6B6459;
-    --accent: #C1372A; --accent-dark: #8F2A20; --border: rgba(43,36,32,0.14);
+    --bg: #F5EDE0; --text: #1F2937; --text-secondary: #4B5563;
+    --accent: #C1372A; --accent-dark: #8F2A20; --border: #C8BC9F;
   }
   * { box-sizing: border-box; }
   body {
@@ -70,17 +70,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     color: var(--text); font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   .login-card {
-    background: #FFFCF6; border: 1px solid var(--border); border-radius: 18px;
+    background: #FFFCF6; border: 1.5px solid #C8BC9F; border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
     padding: 36px 30px; width: 100%; max-width: 360px; margin: 20px;
   }
   .login-card h1 {
-    font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; font-size: 24px; text-transform: lowercase;
+    font-family: 'Anton', Impact, system-ui, -apple-system, sans-serif; font-size: 24px;
+    letter-spacing: 0.04em; text-transform: capitalize;
     margin: 0 0 4px; text-align: center;
   }
   .login-card p.sub { text-align: center; font-size: 13px; color: var(--text-secondary); margin: 0 0 26px; }
-  label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 6px; }
+  label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; color: var(--text); }
   input {
-    width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border);
+    width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #C8BC9F;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; margin-bottom: 16px; background: var(--bg); color: var(--text);
   }
   input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }

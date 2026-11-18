@@ -43,9 +43,9 @@ $page_title = 'Dashboard';
 $active_page = 'dashboard';
 $extra_style = <<<'CSS'
   .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:20px; }
-  .summary-box { background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:16px; }
+  .summary-box { background:var(--bg-card); border:1.5px solid #C8BC9F; box-shadow:0 2px 8px rgba(0,0,0,0.07); border-radius:14px; padding:16px; }
   .summary-label { color:var(--text-secondary); font-size:12px; }
-  .summary-value { font-family:'Anton', Impact, system-ui, sans-serif; font-size:22px; margin-top:4px; }
+  .summary-value { font-family:'Anton', Impact, system-ui, sans-serif; font-size:22px; margin-top:4px; letter-spacing:0.04em; }
 CSS;
 require_once '../includes/admin-header.php';
 ?>

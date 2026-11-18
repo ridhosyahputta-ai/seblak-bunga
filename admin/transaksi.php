@@ -39,11 +39,10 @@ $errors = [];
 // pas validasi gagal (biar kasir gak perlu ngetik ulang dari nol).
 $old = [
     'metode_bayar'   => 'tunai',
-    'pelanggan_mode' => 'none',
+    'pelanggan_mode' => 'baru',
     'id_pelanggan'   => '',
     'pelanggan_nama' => '',
     'pelanggan_hp'   => '',
-    'catatan'        => '',
     'item'           => [['level_pedas' => 'Level 1', 'topping' => []]],
 ];
 
@@ -58,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $metode_bayar   = isset($_POST['metode_bayar']) && is_string($_POST['metode_bayar']) ? $_POST['metode_bayar'] : '';
     $pelanggan_mode = isset($_POST['pelanggan_mode']) && is_string($_POST['pelanggan_mode']) ? $_POST['pelanggan_mode'] : '';
-    $catatan        = isset($_POST['catatan']) && is_string($_POST['catatan']) ? trim($_POST['catatan']) : '';
     $itemsRaw       = isset($_POST['item']) && is_array($_POST['item']) ? $_POST['item'] : [];
 
     // simpan balik ke $old buat repopulate form kalau gagal validasi
@@ -67,43 +65,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['id_pelanggan']   = isset($_POST['id_pelanggan']) && is_string($_POST['id_pelanggan']) ? $_POST['id_pelanggan'] : '';
     $old['pelanggan_nama'] = isset($_POST['pelanggan_nama']) && is_string($_POST['pelanggan_nama']) ? trim($_POST['pelanggan_nama']) : '';
     $old['pelanggan_hp']   = isset($_POST['pelanggan_hp']) && is_string($_POST['pelanggan_hp']) ? trim($_POST['pelanggan_hp']) : '';
-    $old['catatan']        = $catatan;
     $old['item']           = $itemsRaw ?: $old['item'];
 
     if (!in_array($metode_bayar, ['tunai', 'qris', 'utang'], true)) {
         $errors[] = 'Metode bayar tidak valid.';
     }
-    if (!in_array($pelanggan_mode, ['none', 'existing', 'baru'], true)) {
-        $errors[] = 'Pilihan pelanggan tidak valid.';
+    if (!in_array($pelanggan_mode, ['baru', 'existing'], true)) {
+        $errors[] = 'Pilihan tipe pelanggan tidak valid.';
     }
 
-    // -- Tentuin pelanggan --
-    // id_pelanggan nullable karena pembeli lewat gak perlu dicatat.
-    // Wajib diisi kalau metode 'utang', biar jelas piutangnya ke siapa.
-    if ($pelanggan_mode === 'baru'
-        && ($old['pelanggan_nama'] === '' || mb_strlen($old['pelanggan_nama']) > 100)) {
-        $errors[] = 'Nama pelanggan baru wajib diisi (maksimal 100 karakter).';
-    }
-    if (mb_strlen($catatan) > 255) {
-        $errors[] = 'Catatan maksimal 255 karakter.';
-    }
-    if ($pelanggan_mode === 'existing') {
+    // -- Tentuin & validasi pelanggan --
+    // Utang wajib mencatat nama dan no_hp agar piutang dapat ditagih.
+    if ($pelanggan_mode === 'baru') {
+        if ($old['pelanggan_nama'] === '' || mb_strlen($old['pelanggan_nama']) > 100) {
+            $errors[] = 'Nama pelanggan baru wajib diisi (maksimal 100 karakter).';
+        }
+        if ($metode_bayar === 'utang' && $old['pelanggan_hp'] === '') {
+            $errors[] = 'Nomor HP pelanggan baru wajib diisi untuk transaksi utang.';
+        } elseif ($old['pelanggan_hp'] !== '' && !preg_match('/^[0-9+(). -]{6,20}$/', $old['pelanggan_hp'])) {
+            $errors[] = 'Nomor HP pelanggan tidak valid.';
+        }
+    } elseif ($pelanggan_mode === 'existing') {
         if (!ctype_digit((string) $old['id_pelanggan']) || (int) $old['id_pelanggan'] <= 0) {
-            $errors[] = 'Pelanggan yang dipilih tidak valid.';
+            $errors[] = 'Pelanggan lama yang dipilih tidak valid.';
         } else {
-            $stmt = $pdo->prepare("SELECT id FROM pelanggan WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT id, nama, no_hp FROM pelanggan WHERE id = ?");
             $stmt->execute([(int) $old['id_pelanggan']]);
-            if (!$stmt->fetchColumn()) {
+            $pelangganExist = $stmt->fetch();
+            if (!$pelangganExist) {
                 $errors[] = 'Pelanggan yang dipilih tidak ditemukan.';
+            } elseif ($metode_bayar === 'utang' && (empty($pelangganExist['no_hp']) || trim($pelangganExist['no_hp']) === '')) {
+                $errors[] = 'Pelanggan lama ini belum memiliki nomor HP. Lengkapi nomor HP atau gunakan opsi Pelanggan baru agar piutang dapat ditagih.';
             }
         }
-    }
-    if ($pelanggan_mode === 'baru' && $old['pelanggan_hp'] !== ''
-        && !preg_match('/^[0-9+(). -]{6,20}$/', $old['pelanggan_hp'])) {
-        $errors[] = 'Nomor HP pelanggan tidak valid.';
-    }
-    if ($metode_bayar === 'utang' && $pelanggan_mode === 'none') {
-        $errors[] = 'Metode bayar utang wajib mencatat identitas pelanggan (pelanggan lama atau baru).';
     }
 
     // -- Validasi & bersihin data porsi --
@@ -158,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // +id) baru di-UPDATE setelah tau id auto-increment-nya.
             $kodeSementara = 'TEMP-' . bin2hex(random_bytes(12));
             $stmt = $pdo->prepare("INSERT INTO transaksi (kode_transaksi, id_pelanggan, metode_bayar, status_bayar, total_bayar, catatan) VALUES (?, ?, ?, ?, 0, ?)");
-            $stmt->execute([$kodeSementara, $id_pelanggan, $metode_bayar, $status_bayar, $catatan !== '' ? $catatan : null]);
+            $stmt->execute([$kodeSementara, $id_pelanggan, $metode_bayar, $status_bayar, null]);
             $id_transaksi = (int) $pdo->lastInsertId();
 
             $grand_total = 0;
@@ -289,7 +283,7 @@ $extra_style = <<<CSS
   .sub-block { margin-top: 10px; padding: 12px; background: var(--bg); border-radius: 10px; display: none; }
   .sub-block.show { display: block; }
 
-  .item-row { border: 1px dashed var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  .item-row { border: 1.5px dashed #C8BC9F; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
   .item-row-head { display: flex; align-items: center; justify-content: space-between; }
   .item-row-title { font-weight: 600; font-size: 14px; }
   .btn-remove-item {
@@ -316,7 +310,7 @@ $extra_style = <<<CSS
 
   .grand-total { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
   .grand-total .gt-label { font-size: 13.5px; color: var(--text-secondary); }
-  .grand-total .gt-value { font-family: 'Anton', sans-serif; font-size: 22px; }
+  .grand-total .gt-value { font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 0.04em; }
 
   .form-actions { display: flex; justify-content: center; margin-top: 18px; }
   .btn-simpan-transaksi {
@@ -341,7 +335,7 @@ $extra_style = <<<CSS
   }
   .modal-card {
     background: var(--bg-card);
-    border: 1.5px solid var(--border);
+    border: 1.5px solid #C8BC9F;
     border-radius: 18px;
     width: 100%; max-width: 420px;
     max-height: 90vh; overflow-y: auto;
@@ -360,7 +354,8 @@ $extra_style = <<<CSS
   .modal-title {
     font-family: 'Anton', Impact, system-ui, sans-serif;
     font-size: 18px; margin: 0; color: var(--text);
-    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
   }
   .modal-close {
     background: transparent; border: none; font-size: 26px; line-height: 1;
@@ -368,7 +363,7 @@ $extra_style = <<<CSS
   }
   .modal-close:hover { color: var(--accent); }
   .qris-summary {
-    background: var(--bg); border: 1px solid var(--border);
+    background: var(--bg); border: 1.5px solid #C8BC9F;
     border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
   }
   .qris-customer {
@@ -382,9 +377,10 @@ $extra_style = <<<CSS
   .qris-total-value {
     font-family: 'Anton', Impact, system-ui, sans-serif;
     font-size: 22px; color: var(--accent);
+    letter-spacing: 0.04em;
   }
   .qris-image-wrap {
-    background: #FFFFFF; border: 1.5px solid var(--border);
+    background: #FFFFFF; border: 1.5px solid #C8BC9F;
     border-radius: 14px; padding: 14px; text-align: center;
     margin-bottom: 12px; box-shadow: 0 4px 12px rgba(43, 36, 32, 0.05);
   }
@@ -456,16 +452,21 @@ require_once '../includes/admin-header.php';
 
       <label style="margin-top:16px;">Pelanggan</label>
       <div class="radio-group">
-        <label><input type="radio" name="pelanggan_mode" value="none" <?= $old['pelanggan_mode'] === 'none' ? 'checked' : '' ?>> Pembeli lewat (gak dicatat)</label>
-        <label><input type="radio" name="pelanggan_mode" value="existing" <?= $old['pelanggan_mode'] === 'existing' ? 'checked' : '' ?>> Pelanggan lama</label>
         <label><input type="radio" name="pelanggan_mode" value="baru" <?= $old['pelanggan_mode'] === 'baru' ? 'checked' : '' ?>> Pelanggan baru</label>
+        <label><input type="radio" name="pelanggan_mode" value="existing" <?= $old['pelanggan_mode'] === 'existing' ? 'checked' : '' ?>> Pelanggan lama</label>
       </div>
-      <p class="empty-note" style="margin:6px 0 0;">Wajib pilih pelanggan lama/baru kalau metode bayar Utang, biar jelas piutangnya ditagih ke siapa.</p>
+
+      <div class="sub-block" id="block-baru">
+        <label>Nama pelanggan baru</label>
+        <input type="text" name="pelanggan_nama" maxlength="100" placeholder="mis. Teh Dewi, Kang Asep" value="<?= htmlspecialchars($old['pelanggan_nama']) ?>">
+        <label>No. HP <span class="opt" id="label-hp-opt">(opsional)</span></label>
+        <input type="tel" name="pelanggan_hp" maxlength="20" placeholder="mis. 081234567890" value="<?= htmlspecialchars($old['pelanggan_hp']) ?>">
+      </div>
 
       <div class="sub-block" id="block-existing">
-        <label>Pilih pelanggan</label>
+        <label>Pilih pelanggan lama</label>
         <select name="id_pelanggan">
-          <option value="">-- pilih --</option>
+          <option value="">-- pilih pelanggan --</option>
           <?php foreach ($pelangganList as $p): ?>
             <option value="<?= (int) $p['id'] ?>" <?= (string) $old['id_pelanggan'] === (string) $p['id'] ? 'selected' : '' ?>>
               <?= htmlspecialchars($p['nama']) ?><?= $p['no_hp'] ? ' — ' . htmlspecialchars($p['no_hp']) : '' ?>
@@ -473,16 +474,6 @@ require_once '../includes/admin-header.php';
           <?php endforeach; ?>
         </select>
       </div>
-
-      <div class="sub-block" id="block-baru">
-        <label>Nama pelanggan baru</label>
-        <input type="text" name="pelanggan_nama" maxlength="100" value="<?= htmlspecialchars($old['pelanggan_nama']) ?>">
-        <label>No. HP <span class="opt">(opsional)</span></label>
-        <input type="tel" name="pelanggan_hp" maxlength="20" value="<?= htmlspecialchars($old['pelanggan_hp']) ?>">
-      </div>
-
-      <label>Catatan <span class="opt">(opsional)</span></label>
-      <input type="text" name="catatan" maxlength="255" value="<?= htmlspecialchars($old['catatan']) ?>" placeholder="mis. dibungkus, dianter ke gang sebelah">
     </div>
 
     <div class="form-actions">
@@ -607,27 +598,24 @@ require_once '../includes/admin-header.php';
     if (e.target.type === 'checkbox') calcGrandTotal();
   });
 
-  // Toggle blok pelanggan lama/baru sesuai radio yang dipilih.
+  // Toggle blok pelanggan baru/lama sesuai radio yang dipilih.
   function syncPelangganBlocks() {
-    var mode = document.querySelector('input[name=pelanggan_mode]:checked').value;
-    document.getElementById('block-existing').classList.toggle('show', mode === 'existing');
+    var modeEl = document.querySelector('input[name=pelanggan_mode]:checked');
+    var mode = modeEl ? modeEl.value : 'baru';
     document.getElementById('block-baru').classList.toggle('show', mode === 'baru');
+    document.getElementById('block-existing').classList.toggle('show', mode === 'existing');
   }
   document.querySelectorAll('input[name=pelanggan_mode]').forEach(function (r) {
     r.addEventListener('change', syncPelangganBlocks);
   });
 
-  // Metode Utang: opsi 'Pembeli lewat' dimatikan (piutang harus punya identitas).
-  // Kalau sedang terpilih, dialihkan ke Pelanggan lama (kalau ada datanya) atau baru.
+  // Metode bayar Utang: sesuaikan keterangan No. HP (wajib jika Utang).
   function syncMetodeBayar() {
-    var utang = document.querySelector('input[name=metode_bayar]:checked').value === 'utang';
-    var none = document.querySelector('input[name=pelanggan_mode][value=none]');
-    none.disabled = utang;
-    if (utang && none.checked) {
-      var sel = document.querySelector('select[name=id_pelanggan]');
-      var adaPelanggan = sel && Array.prototype.some.call(sel.options, function (o) { return o.value !== ''; });
-      document.querySelector('input[name=pelanggan_mode][value=' + (adaPelanggan ? 'existing' : 'baru') + ']').checked = true;
-      syncPelangganBlocks();
+    var metodeEl = document.querySelector('input[name=metode_bayar]:checked');
+    var utang = (metodeEl ? metodeEl.value : '') === 'utang';
+    var hpOpt = document.getElementById('label-hp-opt');
+    if (hpOpt) {
+      hpOpt.textContent = utang ? '(wajib jika Utang)' : '(opsional)';
     }
   }
   document.querySelectorAll('input[name=metode_bayar]').forEach(function (r) {
@@ -644,7 +632,7 @@ require_once '../includes/admin-header.php';
 
   function getCustomerDisplayName() {
     var modeEl = document.querySelector('input[name=pelanggan_mode]:checked');
-    var mode = modeEl ? modeEl.value : 'none';
+    var mode = modeEl ? modeEl.value : 'baru';
     if (mode === 'baru') {
       var namaEl = document.querySelector('input[name=pelanggan_nama]');
       var nama = namaEl ? namaEl.value.trim() : '';
@@ -657,7 +645,7 @@ require_once '../includes/admin-header.php';
       }
       return 'Pelanggan Lama';
     }
-    return 'Pelanggan Umum';
+    return 'Pelanggan Baru';
   }
 
   function openQrisModal() {

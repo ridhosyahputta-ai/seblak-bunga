@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'hapus') {
         $id = (int) ($_POST['id'] ?? 0);
 
-        $stmt = $pdo->prepare("SELECT nama_topping FROM topping WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT nama_topping, foto FROM topping WHERE id = ?");
         $stmt->execute([$id]);
         $topping = $stmt->fetch();
 
@@ -203,6 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($jumlahDipakai > 0) {
             $_SESSION['flash_error'] = "Topping \"{$topping['nama_topping']}\" sudah pernah dipakai di $jumlahDipakai transaksi, tidak bisa dihapus permanen. Nonaktifkan saja supaya histori transaksi lama tetap utuh.";
         } else {
+            hapusFotoLama($topping['foto'] ?? null);
             $stmt = $pdo->prepare("DELETE FROM topping WHERE id = ?");
             $stmt->execute([$id]);
             $_SESSION['flash_success'] = "Topping \"{$topping['nama_topping']}\" berhasil dihapus permanen.";
@@ -398,14 +399,12 @@ require_once '../includes/admin-header.php';
                       </button>
                     </form>
 
-                    <?php if ($dipakai === 0): ?>
-                      <form method="POST" action="topping.php" onsubmit="return confirm('Hapus permanen topping ini? Aksi tidak bisa dibatalkan.');">
-                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                        <input type="hidden" name="action" value="hapus">
-                        <input type="hidden" name="id" value="<?= (int) $t['id'] ?>">
-                        <button type="submit" class="btn-danger">Hapus</button>
-                      </form>
-                    <?php endif; ?>
+                    <form method="POST" action="topping.php" onsubmit="<?= $dipakai > 0 ? "alert('Topping “" . htmlspecialchars($t['nama_topping'], ENT_QUOTES) . "” sudah pernah dipakai di " . $dipakai . " transaksi sehingga tidak bisa dihapus permanen agar riwayat nota lama tetap utuh.\\n\\nSilakan gunakan tombol Nonaktifkan agar tidak muncul lagi pada pilihan menu atau transaksi baru.'); return false;" : "return confirm('Hapus permanen topping “" . htmlspecialchars($t['nama_topping'], ENT_QUOTES) . "”? Aksi tidak bisa dibatalkan.');" ?>">
+                      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                      <input type="hidden" name="action" value="hapus">
+                      <input type="hidden" name="id" value="<?= (int) $t['id'] ?>">
+                      <button type="submit" class="btn-danger" title="<?= $dipakai > 0 ? 'Sudah dipakai di ' . $dipakai . ' transaksi (tidak bisa dihapus permanen)' : 'Hapus permanen' ?>">Hapus</button>
+                    </form>
                   </div>
                 </td>
               </tr>
