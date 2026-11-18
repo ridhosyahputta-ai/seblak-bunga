@@ -273,6 +273,16 @@ foreach ($old['item'] as $i => $itemData) {
 $templateRowHtml = renderItemRow('__INDEX__', [], $toppings, []);
 $nextIndex = count($old['item']);
 
+// Deteksi gambar QRIS Seblak Bunga (smart fallback)
+$qrisCandidates = ['qris-seblak-bunga.png', 'qris-seblak-bunga.jpg', 'qris-seblak-bunga.jpeg'];
+$qrisImageSrc = '../assets/img/qris-default.svg';
+foreach ($qrisCandidates as $qc) {
+    if (is_file(__DIR__ . '/../assets/img/' . $qc)) {
+        $qrisImageSrc = '../assets/img/' . $qc;
+        break;
+    }
+}
+
 $page_title  = 'Input Transaksi';
 $active_page = 'transaksi';
 $extra_style = <<<CSS
@@ -318,6 +328,86 @@ $extra_style = <<<CSS
   @media (max-width: 480px) {
     .btn-simpan-transaksi { width: 100%; }
   }
+
+  /* Modal Pop-up QRIS */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(43, 36, 32, 0.65);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .modal-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 18px;
+    width: 100%; max-width: 420px;
+    max-height: 90vh; overflow-y: auto;
+    padding: 22px;
+    box-shadow: 0 16px 40px rgba(43, 36, 32, 0.22);
+    animation: modalPopIn 0.2s ease-out;
+  }
+  @keyframes modalPopIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .modal-title {
+    font-family: 'Anton', Impact, system-ui, sans-serif;
+    font-size: 18px; margin: 0; color: var(--text);
+    text-transform: lowercase;
+  }
+  .modal-close {
+    background: transparent; border: none; font-size: 26px; line-height: 1;
+    color: var(--text-secondary); cursor: pointer; padding: 0 4px;
+  }
+  .modal-close:hover { color: var(--accent); }
+  .qris-summary {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
+  }
+  .qris-customer {
+    font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;
+  }
+  .qris-customer strong { color: var(--text); font-weight: 600; }
+  .qris-total-box {
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .qris-total-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .qris-total-value {
+    font-family: 'Anton', Impact, system-ui, sans-serif;
+    font-size: 22px; color: var(--accent);
+  }
+  .qris-image-wrap {
+    background: #FFFFFF; border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 14px; text-align: center;
+    margin-bottom: 12px; box-shadow: 0 4px 12px rgba(43, 36, 32, 0.05);
+  }
+  .qris-qr-img {
+    width: 220px; max-width: 100%; height: auto; display: inline-block;
+  }
+  .qris-instruction {
+    font-size: 12.5px; color: var(--text-secondary); text-align: center;
+    margin: 0 0 18px; line-height: 1.45;
+  }
+  .modal-footer {
+    display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+  }
+  .modal-footer .btn {
+    min-height: 42px; padding: 10px 20px; font-size: 13.5px; width: auto;
+  }
+  .modal-footer .btn-primary { width: auto; }
+  @media (max-width: 480px) {
+    .modal-card { padding: 18px; }
+    .modal-footer { flex-direction: column-reverse; }
+    .modal-footer .btn { width: 100%; }
+    .qris-qr-img { width: 190px; }
+  }
 CSS;
 require_once '../includes/admin-header.php';
 ?>
@@ -336,6 +426,20 @@ require_once '../includes/admin-header.php';
 
   <form method="POST" action="transaksi.php" id="form-transaksi">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+
+    <div class="card">
+      <h2>porsi seblak</h2>
+      <p class="empty-note" style="margin:0 0 10px;">Harga dasar saat ini: <strong>Rp<?= number_format($harga_dasar, 0, ',', '.') ?></strong> / porsi.</p>
+
+      <div id="items-container"><?= $itemRowsHtml ?></div>
+
+      <button type="button" class="btn-add-item" id="btn-add-item">+ Tambah Porsi</button>
+
+      <div class="grand-total">
+        <span class="gt-label">Total keseluruhan</span>
+        <span class="gt-value">Rp<span id="grand-total-value">0</span></span>
+      </div>
+    </div>
 
     <div class="card">
       <h2>pembayaran</h2>
@@ -381,24 +485,37 @@ require_once '../includes/admin-header.php';
       <input type="text" name="catatan" maxlength="255" value="<?= htmlspecialchars($old['catatan']) ?>" placeholder="mis. dibungkus, dianter ke gang sebelah">
     </div>
 
-    <div class="card">
-      <h2>porsi seblak</h2>
-      <p class="empty-note" style="margin:0 0 10px;">Harga dasar saat ini: <strong>Rp<?= number_format($harga_dasar, 0, ',', '.') ?></strong> / porsi.</p>
-
-      <div id="items-container"><?= $itemRowsHtml ?></div>
-
-      <button type="button" class="btn-add-item" id="btn-add-item">+ Tambah Porsi</button>
-
-      <div class="grand-total">
-        <span class="gt-label">Total keseluruhan</span>
-        <span class="gt-value">Rp<span id="grand-total-value">0</span></span>
-      </div>
-    </div>
-
     <div class="form-actions">
       <button type="submit" class="btn-primary btn-simpan-transaksi">Simpan Transaksi</button>
     </div>
   </form>
+
+  <!-- Modal Pop-up QRIS -->
+  <div id="qris-modal" class="modal-overlay" style="display:none;" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="qris-modal-title">
+      <div class="modal-header">
+        <h3 id="qris-modal-title" class="modal-title">Pembayaran QRIS — Seblak Bunga</h3>
+        <button type="button" class="modal-close" id="btn-close-qris" aria-label="Tutup modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="qris-summary">
+          <div class="qris-customer">Pelanggan: <strong id="qris-pelanggan-name">Pelanggan Umum</strong></div>
+          <div class="qris-total-box">
+            <span class="qris-total-label">Total Tagihan</span>
+            <span class="qris-total-value">Rp<span id="qris-modal-total">0</span></span>
+          </div>
+        </div>
+        <div class="qris-image-wrap">
+          <img src="<?= htmlspecialchars($qrisImageSrc) ?>" alt="QRIS Seblak Bunga" class="qris-qr-img">
+        </div>
+        <p class="qris-instruction">Silakan minta pembeli memindai kode QRIS di atas, lalu klik konfirmasi setelah pembayaran masuk.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-batal-qris">Batal</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-qris">Konfirmasi Pembayaran &amp; Simpan</button>
+      </div>
+    </div>
+  </div>
 
   <div class="card">
     <h2>transaksi hari ini</h2>
@@ -519,6 +636,80 @@ require_once '../includes/admin-header.php';
 
   syncPelangganBlocks();
   syncMetodeBayar();
+
+  // Modal Pop-up QRIS Logic
+  var qrisConfirmed = false;
+  var form          = document.getElementById('form-transaksi');
+  var qrisModal     = document.getElementById('qris-modal');
+
+  function getCustomerDisplayName() {
+    var modeEl = document.querySelector('input[name=pelanggan_mode]:checked');
+    var mode = modeEl ? modeEl.value : 'none';
+    if (mode === 'baru') {
+      var namaEl = document.querySelector('input[name=pelanggan_nama]');
+      var nama = namaEl ? namaEl.value.trim() : '';
+      return nama || 'Pelanggan Baru';
+    } else if (mode === 'existing') {
+      var sel = document.querySelector('select[name=id_pelanggan]');
+      if (sel && sel.selectedIndex >= 0 && sel.value !== '') {
+        var optText = sel.options[sel.selectedIndex].text;
+        return optText.split('—')[0].trim() || 'Pelanggan Lama';
+      }
+      return 'Pelanggan Lama';
+    }
+    return 'Pelanggan Umum';
+  }
+
+  function openQrisModal() {
+    qrisModal.style.display = 'flex';
+    qrisModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeQrisModal() {
+    qrisModal.style.display = 'none';
+    qrisModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  form.addEventListener('submit', function (e) {
+    var metodeEl = document.querySelector('input[name=metode_bayar]:checked');
+    var metode = metodeEl ? metodeEl.value : 'tunai';
+
+    if (metode === 'qris' && !qrisConfirmed) {
+      if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
+        return;
+      }
+      e.preventDefault();
+      document.getElementById('qris-pelanggan-name').textContent = getCustomerDisplayName();
+      document.getElementById('qris-modal-total').textContent = document.getElementById('grand-total-value').textContent;
+      openQrisModal();
+    }
+  });
+
+  document.getElementById('btn-confirm-qris').addEventListener('click', function () {
+    qrisConfirmed = true;
+    closeQrisModal();
+    form.submit();
+  });
+
+  document.getElementById('btn-close-qris').addEventListener('click', closeQrisModal);
+  document.getElementById('btn-batal-qris').addEventListener('click', closeQrisModal);
+
+  qrisModal.addEventListener('click', function (e) {
+    if (e.target === this) {
+      closeQrisModal();
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      if (qrisModal && qrisModal.style.display === 'flex') {
+        closeQrisModal();
+      }
+    }
+  });
+
   renumber();
   calcGrandTotal();
 })();

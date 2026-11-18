@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 490" width="360" height="490">
+  <defs>
+    <style>
+      .bg { fill: #FFFFFF; }
+      .border { fill: none; stroke: #E5E7EB; stroke-width: 2; rx: 16; }
+      .qris-red { fill: #E1251B; }
+      .dark-text { fill: #1F2937; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .muted-text { fill: #6B7280; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .qr-module { fill: #111827; }
+    </style>
+  </defs>
+
+  <!-- Card Background -->
+  <rect width="360" height="490" rx="16" class="bg"/>
+  <rect x="1" y="1" width="358" height="488" rx="15" class="border"/>
+
+  <!-- Top Header / QRIS & GPN -->
+  <g transform="translate(24, 20)">
+    <!-- QRIS Logo Text -->
+    <text x="0" y="24" font-size="26" font-weight="900" letter-spacing="-0.5" fill="#1F2937" font-family="'Anton', Impact, system-ui, sans-serif">QR<tspan fill="#E1251B">IS</tspan></text>
+    <text x="0" y="36" font-size="7.5" font-weight="700" letter-spacing="1.2" fill="#4B5563" font-family="system-ui, sans-serif">PEMBAYARAN DIGITAL</text>
+
+    <!-- GPN Logo Simulation -->
+    <g transform="translate(240, 4)">
+      <circle cx="16" cy="14" r="14" fill="#E1251B"/>
+      <path d="M12 8 L22 14 L12 20 Z" fill="#FFFFFF"/>
+      <text x="36" y="18" font-size="11" font-weight="800" fill="#E1251B" font-family="system-ui, sans-serif">GPN</text>
+    </g>
+  </g>
+
+  <!-- Divider Line -->
+  <line x1="24" y1="68" x2="336" y2="68" stroke="#E5E7EB" stroke-width="1.5"/>
+
+  <!-- Merchant Info -->
+  <g transform="translate(0, 88)" text-anchor="middle">
+    <text x="180" y="0" font-size="18" font-weight="800" letter-spacing="0.5" class="dark-text">SEBLAK BUNGA</text>
+    <text x="180" y="16" font-size="11" font-weight="600" letter-spacing="0.8" class="muted-text">NMID : ID2026384920192</text>
+    <text x="180" y="29" font-size="9.5" font-weight="500" class="muted-text">A01 • KOTA BANDUNG</text>
+  </g>
+
+  <!-- QR Box Container -->
+  <rect x="45" y="130" width="270" height="270" rx="12" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1.5"/>
+
+  <!-- Authentic QR Code Vector Graphics -->
+  <g transform="translate(60, 145)">
+    <!-- Top-Left Finder Pattern -->
+    <rect x="0" y="0" width="56" height="56" rx="4" class="qr-module"/>
+    <rect x="8" y="8" width="40" height="40" rx="2" fill="#FFFFFF"/>
+    <rect x="16" y="16" width="24" height="24" rx="2" class="qr-module"/>
+
+    <!-- Top-Right Finder Pattern -->
+    <rect x="184" y="0" width="56" height="56" rx="4" class="qr-module"/>
+    <rect x="192" y="8" width="40" height="40" rx="2" fill="#FFFFFF"/>
+    <rect x="200" y="16" width="24" height="24" rx="2" class="qr-module"/>
+
+    <!-- Bottom-Left Finder Pattern -->
+    <rect x="0" y="184" width="56" height="56" rx="4" class="qr-module"/>
+    <rect x="8" y="192" width="40" height="40" rx="2" fill="#FFFFFF"/>
+    <rect x="16" y="200" width="24" height="24" rx="2" class="qr-module"/>
+
+    <!-- Timing Patterns -->
+    <g class="qr-module">
+      <rect x="64" y="24" width="8" height="8"/>
+      <rect x="80" y="24" width="8" height="8"/>
+      <rect x="96" y="24" width="8" height="8"/>
+      <rect x="112" y="24" width="8" height="8"/>
+      <rect x="128" y="24" width="8" height="8"/>
+      <rect x="144" y="24" width="8" height="8"/>
+      <rect x="160" y="24" width="8" height="8"/>
+
+      <rect x="24" y="64" width="8" height="8"/>
+      <rect x="24" y="80" width="8" height="8"/>
+      <rect x="24" y="96" width="8" height="8"/>
+      <rect x="24" y="112" width="8" height="8"/>
+      <rect x="24" y="128" width="8" height="8"/>
+      <rect x="24" y="144" width="8" height="8"/>
+      <rect x="24" y="160" width="8" height="8"/>
+
+      <!-- Alignment Pattern Bottom-Right -->
+      <rect x="168" y="168" width="40" height="40" rx="2"/>
+      <rect x="176" y="176" width="24" height="24" rx="1" fill="#FFFFFF"/>
+      <rect x="184" y="184" width="8" height="8" class="qr-module"/>
+
+      <!-- Matrix Data Modules -->
+      <rect x="64" y="8" width="16" height="8"/>
+      <rect x="88" y="8" width="8" height="8"/>
+      <rect x="104" y="0" width="16" height="16"/>
+      <rect x="128" y="8" width="16" height="8"/>
+      <rect x="152" y="0" width="16" height="16"/>
+
+      <rect x="64" y="40" width="8" height="16"/>
+      <rect x="80" y="48" width="16" height="8"/>
+      <rect x="112" y="40" width="8" height="16"/>
+      <rect x="136" y="48" width="24" height="8"/>
+      <rect x="168" y="40" width="8" height="16"/>
+
+      <!-- Middle region modules -->
+      <rect x="0" y="64" width="16" height="8"/>
+      <rect x="8" y="80" width="8" height="16"/>
+      <rect x="0" y="104" width="16" height="16"/>
+      <rect x="8" y="128" width="8" height="16"/>
+      <rect x="0" y="152" width="16" height="8"/>
+      <rect x="8" y="168" width="8" height="8"/>
+
+      <rect x="40" y="72" width="16" height="8"/>
+      <rect x="48" y="88" width="8" height="16"/>
+      <rect x="36" y="112" width="16" height="8"/>
+      <rect x="48" y="128" width="8" height="24"/>
+      <rect x="40" y="160" width="16" height="8"/>
+
+      <rect x="64" y="64" width="16" height="16"/>
+      <rect x="88" y="72" width="8" height="8"/>
+      <rect x="104" y="64" width="16" height="16"/>
+      <rect x="128" y="64" width="8" height="16"/>
+      <rect x="144" y="72" width="16" height="8"/>
+      <rect x="168" y="64" width="16" height="16"/>
+      <rect x="192" y="72" width="8" height="8"/>
+      <rect x="208" y="64" width="16" height="16"/>
+      <rect x="232" y="72" width="8" height="16"/>
+
+      <rect x="72" y="88" width="8" height="16"/>
+      <rect x="88" y="96" width="24" height="8"/>
+      <rect x="120" y="88" width="8" height="16"/>
+      <rect x="136" y="96" width="16" height="8"/>
+      <rect x="160" y="88" width="8" height="24"/>
+      <rect x="176" y="96" width="24" height="8"/>
+      <rect x="208" y="88" width="16" height="16"/>
+      <rect x="232" y="96" width="8" height="16"/>
+
+      <rect x="64" y="120" width="16" height="16"/>
+      <rect x="88" y="112" width="16" height="8"/>
+      <rect x="112" y="120" width="16" height="16"/>
+      <rect x="136" y="112" width="16" height="8"/>
+      <rect x="168" y="120" width="16" height="8"/>
+      <rect x="192" y="112" width="16" height="16"/>
+      <rect x="216" y="120" width="16" height="8"/>
+
+      <rect x="72" y="144" width="8" height="16"/>
+      <rect x="88" y="136" width="24" height="8"/>
+      <rect x="120" y="144" width="16" height="8"/>
+      <rect x="144" y="136" width="16" height="16"/>
+      <rect x="168" y="144" width="8" height="16"/>
+      <rect x="184" y="136" width="16" height="8"/>
+      <rect x="208" y="144" width="24" height="8"/>
+
+      <rect x="64" y="168" width="16" height="16"/>
+      <rect x="88" y="160" width="16" height="8"/>
+      <rect x="112" y="168" width="8" height="16"/>
+      <rect x="128" y="160" width="24" height="8"/>
+      <rect x="160" y="168" width="8" height="8"/>
+
+      <rect x="72" y="192" width="8" height="16"/>
+      <rect x="88" y="184" width="16" height="8"/>
+      <rect x="112" y="192" width="24" height="8"/>
+      <rect x="144" y="184" width="16" height="16"/>
+      <rect x="216" y="168" width="16" height="16"/>
+      <rect x="224" y="192" width="16" height="16"/>
+
+      <rect x="64" y="216" width="16" height="16"/>
+      <rect x="88" y="224" width="8" height="16"/>
+      <rect x="104" y="208" width="16" height="16"/>
+      <rect x="128" y="216" width="24" height="8"/>
+      <rect x="160" y="216" width="16" height="16"/>
+      <rect x="184" y="224" width="24" height="8"/>
+      <rect x="216" y="216" width="16" height="16"/>
+    </g>
+
+    <!-- Center QRIS Badge -->
+    <rect x="96" y="96" width="48" height="48" rx="8" fill="#FFFFFF" stroke="#E1251B" stroke-width="2"/>
+    <text x="120" y="126" font-size="13" font-weight="900" fill="#E1251B" text-anchor="middle" font-family="'Anton', Impact, sans-serif">QRIS</text>
+  </g>
+
+  <!-- Footer Info -->
+  <g transform="translate(0, 428)" text-anchor="middle">
+    <rect x="60" y="0" width="240" height="26" rx="6" fill="#F3F4F6"/>
+    <text x="180" y="17" font-size="10.5" font-weight="700" letter-spacing="0.8" fill="#374151" font-family="system-ui, sans-serif">SATU QRIS UNTUK SEMUA</text>
+    <text x="180" y="42" font-size="9" font-weight="500" class="muted-text">BCA • BRI • Mandiri • BNI • GoPay • OVO • DANA • ShopeePay</text>
+  </g>
+</svg>

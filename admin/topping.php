@@ -77,8 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($nama === '' || mb_strlen($nama) > 50) {
             $_SESSION['flash_error'] = 'Nama topping wajib diisi (maksimal 50 karakter).';
-        } elseif (!ctype_digit((string) $harga)) {
-            $_SESSION['flash_error'] = 'Harga tambahan harus berupa angka nol atau positif.';
+        } elseif (!ctype_digit((string) $harga) || (int) $harga <= 0) {
+            $_SESSION['flash_error'] = 'Harga topping harus lebih dari Rp 0.';
         } else {
             [$foto, $fotoErr] = prosesUploadFoto($nama);
             if ($fotoErr) {
@@ -104,8 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: topping.php?edit=' . $id);
             exit;
         }
-        if (!ctype_digit((string) $harga)) {
-            $_SESSION['flash_error'] = 'Harga tambahan harus berupa angka nol atau positif.';
+        if (!ctype_digit((string) $harga) || (int) $harga <= 0) {
+            $_SESSION['flash_error'] = 'Harga topping harus lebih dari Rp 0.';
             header('Location: topping.php?edit=' . $id);
             exit;
         }
@@ -311,7 +311,7 @@ require_once '../includes/admin-header.php';
           </div>
           <div>
             <label>Harga tambahan (Rp)</label>
-            <input type="number" name="harga_tambahan" min="0" step="1" required
+            <input type="number" name="harga_tambahan" min="1" step="1" required
                    value="<?= (int) $editTopping['harga_tambahan'] ?>">
           </div>
           <div>
@@ -347,7 +347,7 @@ require_once '../includes/admin-header.php';
           </div>
           <div>
             <label>Harga tambahan (Rp)</label>
-            <input type="number" name="harga_tambahan" min="0" step="1" required placeholder="mis. 3000">
+            <input type="number" name="harga_tambahan" min="1" step="1" required placeholder="mis. 3000">
           </div>
           <div>
             <label>Foto (opsional, JPG/PNG/WEBP, maks 2MB)</label>
