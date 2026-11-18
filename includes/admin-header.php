@@ -157,11 +157,11 @@ function navClass($page, $active_page) {
       <h1 class="page-title"><?= htmlspecialchars($page_title ?: 'admin') ?></h1>
     </div>
     <nav class="admin-nav">
-      <a href="dashboard.php"<?= navClass('dashboard', $active_page) ?>>Dashboard</a>
+      <a href="topping.php"<?= navClass('topping', $active_page) ?>>Topping</a>
       <a href="transaksi.php"<?= navClass('transaksi', $active_page) ?>>Input Transaksi</a>
       <a href="piutang.php"<?= navClass('piutang', $active_page) ?>>Piutang</a>
       <a href="laporan.php"<?= navClass('laporan', $active_page) ?>>Laporan</a>
-      <a href="topping.php"<?= navClass('topping', $active_page) ?>>Topping</a>
+      <a href="dashboard.php"<?= navClass('dashboard', $active_page) ?>>Dashboard</a>
       <form method="POST" action="logout.php" class="logout-form">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
         <button type="submit" class="logout-link">Logout</button>
